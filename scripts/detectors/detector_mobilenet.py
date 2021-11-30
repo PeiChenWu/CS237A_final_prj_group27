@@ -5,7 +5,11 @@ import os
 
 # watch out on the order for the next two imports lol
 from tf import TransformListener
-import tensorflow as tf
+try:
+    import tensorflow.compat.v1 as tf
+    tf.disable_v2_behavior()
+except:
+    pass
 import numpy as np
 from sensor_msgs.msg import CompressedImage, Image, CameraInfo, LaserScan
 from asl_turtlebot.msg import DetectedObject, DetectedObjectList

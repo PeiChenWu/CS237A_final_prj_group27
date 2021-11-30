@@ -5,7 +5,8 @@ import os
 # watch out on the order for the next two imports lol
 from tf import TransformListener
 try:
-    import tensorflow as tf
+    import tensorflow.compat.v1 as tf
+    tf.disable_v2_behavior()
 except:
     pass
 import numpy as np
@@ -135,7 +136,7 @@ class Detector:
         f_scores, f_boxes, f_classes = [], [], []
         f_num = 0
 
-        for i in range(num):
+        for i in range(int(num)):
             if scores[i] >= self.params.min_score:
                 f_scores.append(scores[i])
                 f_boxes.append(boxes[i])
@@ -159,9 +160,11 @@ class Detector:
 
         ########## Code starts here ##########
         # TODO: Compute x, y, z.
-        x = 0.
-        y = 0.
-        z = 1.
+        z = ((u - self.cx) / self.fx)**2 + ((v - self.cy) / self.fy)**2 + 1
+        z = np.sqrt(z)
+        z = 1.0 / z
+        x = z * (u - self.cx) / self.fx
+        y = z * (v - self.cy) / self.fy
         ########## Code ends here ##########
 
         return x, y, z
@@ -258,10 +261,11 @@ class Detector:
 
         ########## Code starts here ##########
         # TODO: Extract camera intrinsic parameters.
-        self.cx = 0.
-        self.cy = 0.
-        self.fx = 1.
-        self.fy = 1.
+        K = msg.K
+        self.cx = K[2]
+        self.cy = K[5]
+        self.fx = K[0]
+        self.fy = K[4]
         ########## Code ends here ##########
 
     def laser_callback(self, msg):
