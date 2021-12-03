@@ -58,7 +58,7 @@ class Navigator:
         self.occupancy_updated = False
 
         # plan parameters
-        self.plan_resolution = 0.1
+        self.plan_resolution = 1 #0.1
         self.plan_horizon = 15
 
         # time when we started following the plan
@@ -67,10 +67,10 @@ class Navigator:
         self.plan_start = [0.0, 0.0]
 
         # Robot limits
-        self.v_max = 0.2  # maximum velocity
+        self.v_max = 0.5  # maximum velocity
         self.om_max = 0.4  # maximum angular velocity
 
-        self.v_des = 0.12  # desired cruising velocity
+        self.v_des = 0.2 #0.12  # desired cruising velocity
         self.theta_start_thresh = 0.05  # threshold in theta to start moving forward when path-following
         self.start_pos_thresh = (
             0.2  # threshold to be far enough into the plan to recompute it
@@ -86,13 +86,13 @@ class Navigator:
         self.traj_dt = 0.1
 
         # trajectory tracking controller parameters
-        self.kpx = 0.5
-        self.kpy = 0.5
-        self.kdx = 1.5
-        self.kdy = 1.5
+        self.kpx = 5.0 #0.5
+        self.kpy = 5.0 #0.5
+        self.kdx = 10.0 #1.5
+        self.kdy = 10.0 #1.5
 
         # heading controller parameters
-        self.kp_th = 2.0
+        self.kp_th = 10.0 #2.0
 
         self.traj_controller = TrajectoryTracker(
             self.kpx, self.kpy, self.kdx, self.kdy, self.v_max, self.om_max

@@ -32,20 +32,21 @@ def load_object_labels(filename):
 
 class DetectorParams:
 
-    def __init__(self, verbose=False):
+    def __init__(self, verbose=True):
 
         # Set to True to use tensorflow and a conv net.
         # False will use a very simple color thresholding to detect stop signs only.
         self.use_tf = rospy.get_param("use_tf")
 
         # Path to the trained conv net
-        model_path = rospy.get_param("~model_path", "../../tfmodels/stop_signs_gazebo.pb")
+        #model_path = rospy.get_param("~model_path", "../../tfmodels/stop_signs_gazebo.pb")
+        model_path = rospy.get_param("~model_path", "../../tfmodels/ssd_mobilenet_v1_coco.pb")
         label_path = rospy.get_param("~label_path", "../../tfmodels/coco_labels.txt")
         self.model_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), model_path)
         self.label_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), label_path)
 
         # Minimum score for positive detection
-        self.min_score = rospy.get_param("~min_score", 0.5)
+        self.min_score = rospy.get_param("~min_score", 0.7)
 
         if verbose:
             print("DetectorParams:")
@@ -53,6 +54,7 @@ class DetectorParams:
             print("    model_path = {}".format(model_path))
             print("    label_path = {}".format(label_path))
             print("    min_score = {}".format(self.min_score))
+
 
 class Detector:
 
@@ -87,6 +89,9 @@ class Detector:
         self.object_publishers = {}
         self.object_labels = load_object_labels(self.params.label_path)
 
+	# Add a dictionary for object database - MHO - move to supervisor.py
+	#self.object_db = {}
+
         self.tf_listener = TransformListener()
         rospy.Subscriber('/camera/image_raw', Image, self.camera_callback, queue_size=1)
         rospy.Subscriber('/camera/camera_info', CameraInfo, self.camera_info_callback)
@@ -106,7 +111,8 @@ class Detector:
                 (boxes, scores, classes, num) = self.sess.run(
                 [self.d_boxes,self.d_scores,self.d_classes,self.num_d],
                 feed_dict={self.image_tensor: image_np_expanded})
-
+            
+ #           print(scores)
             return self.filter(boxes[0], scores[0], classes[0], num[0])
 
         else:
@@ -136,15 +142,22 @@ class Detector:
         f_scores, f_boxes, f_classes = [], [], []
         f_num = 0
 
+	
         for i in range(int(num)):
             if scores[i] >= self.params.min_score:
                 f_scores.append(scores[i])
                 f_boxes.append(boxes[i])
                 f_classes.append(int(classes[i]))
                 f_num += 1
+                #print("Found something", f_classes)
             else:
                 break
-
+        #print("CLASS: ", f_classes)
+        #print("CLASS: ")
+        #print("CLASS: ")
+        #print("CLASS: ", f_classes)
+        #print("CLASS: ")
+        #print("CLASS: ")
         return f_boxes, f_scores, f_classes, f_num
 
     def load_image_into_numpy_array(self, img):
@@ -207,6 +220,7 @@ class Detector:
 
         # runs object detection in the image
         (boxes, scores, classes, num) = self.run_detection(img)
+        #print("Stop Sign:", classes)
 
         if num > 0:
             # some objects were detected
@@ -249,6 +263,12 @@ class Detector:
                 object_msg.thetaright = thetaright
                 object_msg.corners = [ymin,xmin,ymax,xmax]
                 self.object_publishers[cl].publish(object_msg)
+
+                print("Detected object", cl, self.object_labels[cl])
+
+		# stores object into database - move to supervisor.py for future rescue phase
+		#self.object_db[cl] = DetectedObject()
+		#print(self.object_db,  "Object Database')
 
         # displays the camera image
         cv2.imshow("Camera", img_bgr8)

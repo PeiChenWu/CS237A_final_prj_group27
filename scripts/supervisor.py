@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
 from enum import Enum
+#import warnings
+import os
 
 import rospy
 from asl_turtlebot.msg import DetectedObject
@@ -8,6 +10,11 @@ from gazebo_msgs.msg import ModelStates
 from geometry_msgs.msg import Twist, PoseArray, Pose2D, PoseStamped
 from std_msgs.msg import Float32MultiArray, String
 import tf
+import numpy as np
+
+# Suppress warning
+#warnings.filterwarnings("ignore", message="TF_REPEATED_DATA ignoring data with redundant timestamp ")
+
 
 class Mode(Enum):
     """State machine modes. Feel free to change."""
@@ -43,7 +50,8 @@ class SupervisorParams:
         self.stop_min_dist = rospy.get_param("~stop_min_dist", 0.5)
 
         # Time taken to cross an intersection
-        self.crossing_time = rospy.get_param("~crossing_time", 3.)
+        self.crossing_time = rospy.get_param("~crossing_time", 6.)
+
 
         if verbose:
             print("SupervisorParams:")
@@ -52,6 +60,7 @@ class SupervisorParams:
             print("    mapping = {}".format(self.mapping))
             print("    pos_eps, theta_eps = {}, {}".format(self.pos_eps, self.theta_eps))
             print("    stop_time, stop_min_dist, crossing_time = {}, {}, {}".format(self.stop_time, self.stop_min_dist, self.crossing_time))
+            
 
 
 class Supervisor:
@@ -74,6 +83,15 @@ class Supervisor:
         # Current mode
         self.mode = Mode.IDLE
         self.prev_mode = None  # For printing purposes
+        
+        # Add a dictionary for object database - MHO
+        self.object_db = {}
+
+	# Waypoints
+        basedir = '/home/group27/catkin_ws/src/asl_turtlebot/scripts/'
+        self.fname=os.path.join(basedir, "waypts.txt")
+        print(self.fname)
+        self.waypts = []
 
         ########## PUBLISHERS ##########
 
@@ -82,11 +100,31 @@ class Supervisor:
 
         # Command vel (used for idling)
         self.cmd_vel_publisher = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
+        
+        # MARKER PUBLISHER
+       
 
         ########## SUBSCRIBERS ##########
+        
+        # OBJECT LIST SUBSCRIBER (WILL NEED THIS FOR RESCUE PHASE)
+        
+	# rescue command receiver # we can publish a string to /rescue_cmd, then inside the callback, we can create the object list and set the state to rescue state
+        rospy.Subscriber('/rescue_cmd', String, self.rescue_cmd_callback)
+        
+        # bowl detector
+        rospy.Subscriber('/detector/bowl', DetectedObject, self.obj_detected_callback)
 
+        # tv detector
+        rospy.Subscriber('/detector/tv', DetectedObject, self.obj_detected_callback)
+
+        # mouse detector
+        rospy.Subscriber('/detector/mouse', DetectedObject, self.obj_detected_callback)
+        
         # Stop sign detector
         rospy.Subscriber('/detector/stop_sign', DetectedObject, self.stop_sign_detected_callback)
+
+        # traffic light 
+        rospy.Subscriber('/detector/traffic_light', DetectedObject, self.obj_detected_callback)
 
         # High-level navigation pose
         rospy.Subscriber('/nav_pose', Pose2D, self.nav_pose_callback)
@@ -98,13 +136,41 @@ class Supervisor:
 
         # If using rviz, we can subscribe to nav goal click
         if self.params.rviz:
+            #  STILL WORKING ON THIS - MINNIE & PEICHEN
+            #self.use_waypt_flg=True
+            #print("Waypt_flg", self.use_waypt_flg)
+            #if (self.use_waypt_flg):
+            #    waypts = np.genfromtxt(r'savewaypts.txt', delimiter=' ')
+            #    print("Waypt_flg is true", waypts[0])
+            #    self.x_g, self.y_g, self.theta_g = waypts[0]   
+            #    self.mode = Mode.NAV
+
             rospy.Subscriber('/move_base_simple/goal', PoseStamped, self.rviz_goal_callback)
         else:
             self.x_g, self.y_g, self.theta_g = 1.5, -4., 0.
             self.mode = Mode.NAV
         
+        
+    def add_object_to_dict(self, dist, cl):
+        if cl in self.object_db.keys():
+            if abs(dist-self.object_db[cl][0])<0.1 and (dist<self.object_db[cl][0]):
+                self.object_db[cl]  = [dist, self.x, self.y, self.theta]
+                print('update existing item')
+                print(self.object_db)
+        else:
+            self.object_db[cl]  = [dist, self.x, self.y, self.theta]
+            print('add new item')
+            print(self.object_db)
 
     ########## SUBSCRIBER CALLBACKS ##########
+    
+    def rescue_cmd_callback(self, msg):
+        rospy.loginfo(msg)
+	 
+    def obj_detected_callback(self,  msg):
+        dist = msg.distance
+        cl  = msg.id
+        self.add_object_to_dict(dist, cl)
 
     def gazebo_callback(self, msg):
         if "turtlebot3_burger" not in msg.name:
@@ -116,6 +182,8 @@ class Supervisor:
         quaternion = (pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w)
         euler = tf.transformations.euler_from_quaternion(quaternion)
         self.theta = euler[2]
+        #print("Gazebo initial point")
+        #print(self.x, self.y, self.theta)
 
     def rviz_goal_callback(self, msg):
         """ callback for a pose goal sent through rviz """
@@ -132,6 +200,17 @@ class Supervisor:
                           nav_pose_origin.pose.orientation.w)
             euler = tf.transformations.euler_from_quaternion(quaternion)
             self.theta_g = euler[2]
+            
+            print("We should append to the waypts file")
+            print(self.x_g, self.y_g, self.theta_g)
+            self.waypts.append((self.x_g, self.y_g, self.theta_g))
+
+            np.savetxt(self.fname, np.array(self.waypts), delimiter=' ')
+
+            #with open("waypts.txt", "a") as wayptfile:
+            #    wayptfile.write('Waypoint\n')
+            #    wayptfile.write(' '.join('{} {} {}'.format(self.x_g, self.y_g, self.theta_g)))
+
         except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
             pass
 
@@ -152,6 +231,7 @@ class Supervisor:
 
         # if close enough and in nav mode, stop
         if dist > 0 and dist < self.params.stop_min_dist and self.mode == Mode.NAV:
+            self.add_object_to_dict(dist, msg.id)
             self.init_stop_sign()
 
 
@@ -245,7 +325,8 @@ class Supervisor:
         ########## Code starts here ##########
         # TODO: Currently the state machine will just go to the pose without stopping
         #       at the stop sign.
-
+        
+        # EXPLORATION PHASE (INTEGRATE WITH CURRENT STATE MACHINE SHOULD BE SUFFICIENT)
         if self.mode == Mode.IDLE:
             # Send zero velocity
             self.stay_idle()
@@ -262,6 +343,8 @@ class Supervisor:
             if self.has_stopped():
                 self.mode = Mode.CROSS
                 self.init_crossing()
+            else:
+                self.stay_idle()
 
         elif self.mode == Mode.CROSS:
             # Crossing an intersection
@@ -270,7 +353,8 @@ class Supervisor:
             else:
                 self.nav_to_pose() # just go forward
 
-        elif self.mode == Mode.NAV:
+        elif self.mode == Mode.NAV: 
+            
             if self.close_to(self.x_g, self.y_g, self.theta_g):
                 self.mode = Mode.POSE
             else:
@@ -278,6 +362,10 @@ class Supervisor:
 
         else:
             raise Exception("This mode is not supported: {}".format(str(self.mode)))
+            
+       # RESCUE (WILL BE SIMILAR TO EXPLORATION HARD-CODED WAY POINTS, BUT COMMAND Robot position based on object list provided by TA and utilize the previous saved dictionary)
+            
+            
 
         ############ Code ends here ############
 
