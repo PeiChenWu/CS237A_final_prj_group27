@@ -89,13 +89,20 @@ class Supervisor:
 	
         # User index to object id database
         self.usr_idx_to_obj = {
-            '1': [51, "bowl"],
-            '2': [11, "fire hydrant"],
-            '3': [13, "stop sign" ],
-            '4': [74, "mouse" ],
-            '5': [10, "traffic light" ]
+            51: "bowl",
+            11: "fire_hydrant",
+            13: "stop_sign",
+            74: "mouse",
+            10: "traffic_light"
         }
         
+        self.publisher_dict = {
+	        51: rospy.Publisher('/obj_detected/bowl', Pose2D, queue_size=10),
+	        11: rospy.Publisher('/obj_detected/fire_hydrant', Pose2D, queue_size=10),
+	        13: rospy.Publisher('/obj_detected/stop_sign', Pose2D, queue_size=10),
+	        74: rospy.Publisher('/obj_detected/mouse', Pose2D, queue_size=10),
+	        10: rospy.Publisher('/obj_detected/traffic_light', Pose2D, queue_size=10)
+	    }
         self.objs_to_be_rescued = []
 
 	# Waypoints
@@ -168,16 +175,25 @@ class Supervisor:
             self.mode = Mode.NAV
         
         
-    def add_object_to_dict(self, dist, cl):
+    def add_object_to_dict(self, dist, cl, obj_loc):
+	
         if cl in self.object_db.keys():
             if abs(dist-self.object_db[cl][0])<0.1 and (dist<self.object_db[cl][0]):
-                self.object_db[cl]  = [dist, self.x, self.y, self.theta]
+                self.object_db[cl]  = [dist, (self.x, self.y, self.theta), (obj_loc)]
                 print('update existing item')
                 print(self.object_db)
+                pose_obj_msg = Pose2D()
+                pose_obj_msg.x = obj_loc[0]
+                pose_obj_msg.y = obj_loc[1]
+                self.publisher_dict[cl].publish(pose_obj_msg)	
         else:
-            self.object_db[cl]  = [dist, self.x, self.y, self.theta]
+            self.object_db[cl]  = [dist, (self.x, self.y, self.theta), (obj_loc)]
             print('add new item')
             print(self.object_db)
+            pose_obj_msg = Pose2D()
+            pose_obj_msg.x = obj_loc[0]
+            pose_obj_msg.y = obj_loc[1]
+            self.publisher_dict[cl].publish(pose_obj_msg)	
 
     ########## SUBSCRIBER CALLBACKS ##########
     
@@ -194,9 +210,7 @@ class Supervisor:
                 rospy.logwarn('Cannot find object mapping for index: ' + str(idx))
 	
     def obj_detected_callback(self,  msg):
-        dist = msg.distance
         cl  = msg.id
-        self.add_object_to_dict(dist, cl)
         
         d = msg.distance
         thetaleft = msg.thetaleft
@@ -208,17 +222,17 @@ class Supervisor:
         y_c = d * np.sin(theta)
         z_c = 0
         
-        print(f'object in camera frame @ x:{x_c}, y:{y_c}, z: {z_c}')
-        print(f'robot @ x:{self.x}, y:{self.y}, theta:{self.theta}')
+        #print(f'object in camera frame @ x:{x_c}, y:{y_c}, z: {z_c}')
+        #print(f'robot @ x:{self.x}, y:{self.y}, theta:{self.theta}')
         
         #camera frame -> map frame
         try:
-            (trans, rot) = self.trans_listener.lookupTransform(self.origin_frame, '/base_camera', rospy.Time(0))
+            #(trans, rot) = self.trans_listener.lookupTransform(self.origin_frame, '/base_camera', rospy.Time(0))
            
-            quaternion = rot
-            rpy = tf.transformations.euler_from_quaternion(quaternion)
+            #quaternion = rot
+            #rpy = tf.transformations.euler_from_quaternion(quaternion)
             
-            theta_z = rpy[2]
+            #theta_z = rpy[2]
             
             trans = [self.x, self.y, 0]
             theta_z = self.theta + theta
@@ -236,12 +250,14 @@ class Supervisor:
             
             x_m = x_m[0:3]
             
-            print(f'thetaleft:{thetaleft}, thetaright:{thetaright}')
-            print(f'trans: {trans}')
-            print(f'rot: {rpy}' )
-            print(f'test theta: {self.theta + theta}')
-            print(f'object id: {msg.id}')
-            print(f'object in map frame @ {x_m}')
+            self.add_object_to_dict(d, cl, x_m)
+            #print(f'thetaleft:{thetaleft}, thetaright:{thetaright}')
+            #print(f'trans: {trans}')
+            #print(f'rot: {rpy}' )
+            #print(f'test theta: {self.theta + theta}')
+            #print(f'object id: {msg.id}')
+            #print(f'object in map frame @ {x_m}')
+            # if close enough and in nav mode, stop
         except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
             pass
 
@@ -302,11 +318,12 @@ class Supervisor:
         # distance of the stop sign
         dist = msg.distance
 
+
         # if close enough and in nav mode, stop
         if dist > 0 and dist < self.params.stop_min_dist and self.mode == Mode.NAV:
-            self.add_object_to_dict(dist, msg.id)
+            obj_detected_callback(self,  msg)
+            #self.add_object_to_dict(dist, msg.id)
             self.init_stop_sign()
-
 
     ########## STATE MACHINE ACTIONS ##########
 
