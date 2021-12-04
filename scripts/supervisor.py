@@ -108,7 +108,7 @@ class Supervisor:
 	        10: rospy.Publisher('/obj_detected/traffic_light', Pose2D, queue_size=10)
 	    }
         self.objs_to_be_rescued = []
-
+         
 	# Waypoints
         basedir = '/home/group27/catkin_ws/src/asl_turtlebot/scripts/'
         self.fname=os.path.join(basedir, "waypts.txt")
@@ -183,7 +183,7 @@ class Supervisor:
 	
         if cl in self.object_db.keys():
             if abs(dist-self.object_db[cl][0])<0.1 and (dist<self.object_db[cl][0]):
-                self.object_db[cl]  = [dist, (self.x, self.y, self.theta), (obj_loc)]
+                self.object_db[cl]  = [dist, [self.x, self.y, self.theta], (obj_loc)]
                 print('update existing item')
                 print(self.object_db)
                 pose_obj_msg = Pose2D()
@@ -202,17 +202,23 @@ class Supervisor:
     ########## SUBSCRIBER CALLBACKS ##########
     
     def rescue_cmd_callback(self, msg):
+        self.objs_to_be_rescued = []
+                
         rospy.loginfo(msg)
         obj_idx = [s.strip() for s in msg.data.split(',')]
         
         for idx in obj_idx:
-            if idx in self.usr_idx_to_obj :
-                obj_id, obj_name = self.usr_idx_to_obj[idx]
+            obj_id = int(idx)
+            if obj_id in self.usr_idx_to_obj :
+                obj_name = self.usr_idx_to_obj[obj_id]
                 rospy.loginfo('Adding ' + obj_name + " to rescue list")
                 self.objs_to_be_rescued.append(obj_id)
             else:
                 rospy.logwarn('Cannot find object mapping for index: ' + str(idx))
-	
+        
+        if self.objs_to_be_rescued:
+	        self.rescue_wpts()
+	        
     def obj_detected_callback(self,  msg):
         cl  = msg.id
         
@@ -315,6 +321,21 @@ class Supervisor:
         print("{} Waypoints loaded".format(self.wpt_count))
         print(self.wpts)
 
+    def rescue_wpts(self):
+        start_pt = self.wpts[-1,:] # loaded from waypoint file's last waypoint
+        self.wpts = np.zeros((len(self.objs_to_be_rescued) + 1, 3))
+        i = 0
+        for obj in self.objs_to_be_rescued:
+            if obj in self.object_db:
+                self.wpts[i, :] = self.object_db[obj][1]
+                i += 1
+            else:
+                print(f'{obj} not detected. No location available')
+         
+        self.wpts[i,:] = start_pt 
+        self.wpt_count = i + 1
+        self.curr_wpt = 0
+            
     def nav_pose_callback(self, msg):
         self.x_g = msg.x
         self.y_g = msg.y
@@ -406,8 +427,7 @@ class Supervisor:
                rospy.get_rostime() - self.idle_start > rospy.Duration.from_sec(self.params.crossing_time)
 
     ########## Code ends here ##########
-
-
+    
     ########## STATE MACHINE LOOP ##########
 
     def loop(self):
