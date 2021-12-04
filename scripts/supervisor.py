@@ -44,13 +44,13 @@ class SupervisorParams:
         self.theta_eps = rospy.get_param("~theta_eps", 0.3)
 
         # Time to stop at a stop sign
-        self.stop_time = rospy.get_param("~stop_time", 3.)
+        self.stop_time = rospy.get_param("~stop_time", 5.)
 
         # Minimum distance from a stop sign to obey it
         self.stop_min_dist = rospy.get_param("~stop_min_dist", 0.5)
 
         # Time taken to cross an intersection
-        self.crossing_time = rospy.get_param("~crossing_time", 6.)
+        self.crossing_time = rospy.get_param("~crossing_time", 3.)
 
 
         if verbose:
@@ -86,6 +86,17 @@ class Supervisor:
         
         # Add a dictionary for object database - MHO
         self.object_db = {}
+	
+        # User index to object id database
+        self.usr_idx_to_obj = {
+            '1': [51, "bowl"],
+            '2': [11, "fire hydrant"],
+            '3': [13, "stop sign" ],
+            '4': [74, "mouse" ],
+            '5': [10, "traffic light" ]
+        }
+        
+        self.objs_to_be_rescued = []
 
 	# Waypoints
         basedir = '/home/group27/catkin_ws/src/asl_turtlebot/scripts/'
@@ -115,7 +126,7 @@ class Supervisor:
         rospy.Subscriber('/detector/bowl', DetectedObject, self.obj_detected_callback)
 
         # tv detector
-        rospy.Subscriber('/detector/tv', DetectedObject, self.obj_detected_callback)
+        rospy.Subscriber('/detector/fire_hydrant', DetectedObject, self.obj_detected_callback)
 
         # mouse detector
         rospy.Subscriber('/detector/mouse', DetectedObject, self.obj_detected_callback)
@@ -128,7 +139,13 @@ class Supervisor:
 
         # High-level navigation pose
         rospy.Subscriber('/nav_pose', Pose2D, self.nav_pose_callback)
+        
+        #Listen for TF frames
+        self.trans_listener = tf.TransformListener()
 
+        self.origin_frame = "/map" if self.params.mapping else "/odom"
+        self.trans_listener.waitForTransform(self.origin_frame, '/base_camera', rospy.Time(), rospy.Duration(5))
+        
         # If using gazebo, we have access to perfect state
         if self.params.use_gazebo:
             rospy.Subscriber('/gazebo/model_states', ModelStates, self.gazebo_callback)
@@ -166,11 +183,67 @@ class Supervisor:
     
     def rescue_cmd_callback(self, msg):
         rospy.loginfo(msg)
-	 
+        obj_idx = [s.strip() for s in msg.data.split(',')]
+        
+        for idx in obj_idx:
+            if idx in self.usr_idx_to_obj :
+                obj_id, obj_name = self.usr_idx_to_obj[idx]
+                rospy.loginfo('Adding ' + obj_name + " to rescue list")
+                self.objs_to_be_rescued.append(obj_id)
+            else:
+                rospy.logwarn('Cannot find object mapping for index: ' + str(idx))
+	
     def obj_detected_callback(self,  msg):
         dist = msg.distance
         cl  = msg.id
         self.add_object_to_dict(dist, cl)
+        
+        d = msg.distance
+        thetaleft = msg.thetaleft
+        thetaright = msg.thetaright
+        
+        #position of the object in the camera frame
+        theta = thetaright + (thetaleft - thetaright) / 2
+        x_c = d * np.cos(theta) 
+        y_c = d * np.sin(theta)
+        z_c = 0
+        
+        print(f'object in camera frame @ x:{x_c}, y:{y_c}, z: {z_c}')
+        print(f'robot @ x:{self.x}, y:{self.y}, theta:{self.theta}')
+        
+        #camera frame -> map frame
+        try:
+            (trans, rot) = self.trans_listener.lookupTransform(self.origin_frame, '/base_camera', rospy.Time(0))
+           
+            quaternion = rot
+            rpy = tf.transformations.euler_from_quaternion(quaternion)
+            
+            theta_z = rpy[2]
+            
+            trans = [self.x, self.y, 0]
+            theta_z = self.theta + theta
+            
+            T_MC = np.array([
+            [np.cos(theta_z), -np.sin(theta_z), 0, trans[0]], 
+            [np.sin(theta_z),  np.cos(theta_z), 0, trans[1]], 
+            [0,                              0, 1, trans[2]], 
+            [0,                              0, 0,        1],
+            ])
+             
+            x_c_t = np.array([x_c, y_c, z_c, 1])
+            
+            x_m = T_MC @ x_c_t # object in map co-ordinates
+            
+            x_m = x_m[0:3]
+            
+            print(f'thetaleft:{thetaleft}, thetaright:{thetaright}')
+            print(f'trans: {trans}')
+            print(f'rot: {rpy}' )
+            print(f'test theta: {self.theta + theta}')
+            print(f'object id: {msg.id}')
+            print(f'object in map frame @ {x_m}')
+        except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
+            pass
 
     def gazebo_callback(self, msg):
         if "turtlebot3_burger" not in msg.name:

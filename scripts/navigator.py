@@ -2,6 +2,7 @@
 
 import rospy
 from nav_msgs.msg import OccupancyGrid, MapMetaData, Path
+from scipy.ndimage.morphology import grey_dilation
 from geometry_msgs.msg import Twist, Pose2D, PoseStamped
 from std_msgs.msg import String
 import tf
@@ -14,6 +15,7 @@ import scipy.interpolate
 import matplotlib.pyplot as plt
 from controllers import PoseController, TrajectoryTracker, HeadingController
 from enum import Enum
+
 
 from dynamic_reconfigure.server import Server
 from asl_turtlebot.cfg import NavigatorConfig
@@ -58,7 +60,7 @@ class Navigator:
         self.occupancy_updated = False
 
         # plan parameters
-        self.plan_resolution = 1 #0.1
+        self.plan_resolution = 0.15 #0.1
         self.plan_horizon = 15
 
         # time when we started following the plan
@@ -70,7 +72,7 @@ class Navigator:
         self.v_max = 0.5  # maximum velocity
         self.om_max = 0.4  # maximum angular velocity
 
-        self.v_des = 0.2 #0.12  # desired cruising velocity
+        self.v_des = 0.18 #0.12  # desired cruising velocity
         self.theta_start_thresh = 0.05  # threshold in theta to start moving forward when path-following
         self.start_pos_thresh = (
             0.2  # threshold to be far enough into the plan to recompute it
@@ -79,17 +81,17 @@ class Navigator:
         # threshold at which navigator switches from trajectory to pose control
         self.near_thresh = 0.2
         self.at_thresh = 0.02
-        self.at_thresh_theta = 0.05
+        self.at_thresh_theta = 0.1
 
         # trajectory smoothing
-        self.spline_alpha = 0.15
+        self.spline_alpha = 0.05 # 0.15
         self.traj_dt = 0.1
 
         # trajectory tracking controller parameters
-        self.kpx = 5.0 #0.5
-        self.kpy = 5.0 #0.5
-        self.kdx = 10.0 #1.5
-        self.kdy = 10.0 #1.5
+        self.kpx = 10.0 #0.5
+        self.kpy = 10.0 #0.5
+        self.kdx = 20.0 #1.5
+        self.kdy = 20.0 #1.5
 
         # heading controller parameters
         self.kp_th = 10.0 #2.0
@@ -112,13 +114,29 @@ class Navigator:
             "/cmd_smoothed_path_rejected", Path, queue_size=10
         )
         self.nav_vel_pub = rospy.Publisher("/cmd_vel", Twist, queue_size=10)
+        
+        
+        
+        
+        
 
         self.trans_listener = tf.TransformListener()
 
         self.cfg_srv = Server(NavigatorConfig, self.dyn_cfg_callback)
-
-        rospy.Subscriber("/map", OccupancyGrid, self.map_callback)
-        rospy.Subscriber("/map_metadata", MapMetaData, self.map_md_callback)
+        
+        
+        
+        ###########  THIS IS FOR MAP DILATION  ###############
+        # add a publisher for map dilation
+        self.map_dilation_pub = rospy.Publisher("/dilated_map", OccupancyGrid, queue_size=10)
+        # add subscriber to original map and dilate it.
+        rospy.Subscriber("/map", OccupancyGrid, self.dilate_map_callback) # Subscribe to the original map, and dilate the map and publish it.
+        ###########  THIS IS FOR MAP DILATION  ###############
+        
+        
+        
+        rospy.Subscriber("/dilated_map", OccupancyGrid, self.map_callback) # switch to dilated_map topic, to subscribe the dilated map.
+        rospy.Subscriber("/map_metadata", MapMetaData, self.map_md_callback) 
         rospy.Subscriber("/cmd_nav", Pose2D, self.cmd_nav_callback)
 
         print("finished init")
@@ -154,11 +172,29 @@ class Navigator:
         self.map_height = msg.height
         self.map_resolution = msg.resolution
         self.map_origin = (msg.origin.position.x, msg.origin.position.y)
+        
+    
+    
+    
+    def dilate_map_callback(self, msg):
+        print(type(msg.data))
+        original_map = np.array(msg.data) # probablity in row vector
+        length = original_map.shape[0] # len(original_map)
+        original_map = original_map.reshape(int(round(np.sqrt(length))), int(round(np.sqrt(length))))
+        dilated_map = grey_dilation(original_map, size = (10,10)) # from scipy dilation
+        dilated_map = dilated_map.reshape(int(round(np.sqrt(length)))*int(round(np.sqrt(length))))
+        dilated_msg = OccupancyGrid()
+        dilated_msg.info = msg.info
+        dilated_msg.data = dilated_map.tolist()
+        self.map_dilation_pub.publish(dilated_msg)
+        
+ 
 
     def map_callback(self, msg):
         """
         receives new map info and updates the map
         """
+        print(np.array(msg.data).shape)
         self.map_probs = msg.data
         # if we've received the map metadata and have a way to update it:
         if (

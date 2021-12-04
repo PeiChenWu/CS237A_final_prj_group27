@@ -10,7 +10,7 @@
     <arg name="world" value="3ss_1bowl" />
     <arg name="world" value="box.world" />
 -->
-    <arg name="world" value="mouse_tv_bowl_tl_ss2" />
+    <arg name="world" value="mouse_bowl_tl_firehydrant_ss3" />
     <arg name="x_pos" default="3.15"/>
     <arg name="y_pos" default="1.6"/>
     <arg name="z_pos" default="0.0"/>
