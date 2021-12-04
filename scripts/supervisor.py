@@ -87,6 +87,10 @@ class Supervisor:
         # Add a dictionary for object database - MHO
         self.object_db = {}
 	
+        # Add waypoint queue
+        self.wpt_count = 0
+        self.curr_wpt  = 0
+        self.wpts = None
         # User index to object id database
         self.usr_idx_to_obj = {
             51: "bowl",
@@ -305,6 +309,12 @@ class Supervisor:
 
         self.mode = Mode.NAV
 
+    def load_wpts(self, path):
+        self.wpts = np.loadtxt(path, delimiter = ' ')
+        self.wpt_count = self.wpts.shape[0]
+        print("{} Waypoints loaded".format(self.wpt_count))
+        print(self.wpts)
+
     def nav_pose_callback(self, msg):
         self.x_g = msg.x
         self.y_g = msg.y
@@ -321,7 +331,7 @@ class Supervisor:
 
         # if close enough and in nav mode, stop
         if dist > 0 and dist < self.params.stop_min_dist and self.mode == Mode.NAV:
-            obj_detected_callback(self,  msg)
+            self.obj_detected_callback(msg)
             #self.add_object_to_dict(dist, msg.id)
             self.init_stop_sign()
 
@@ -388,6 +398,13 @@ class Supervisor:
         return self.mode == Mode.CROSS and \
                rospy.get_rostime() - self.cross_start > rospy.Duration.from_sec(self.params.crossing_time)
 
+    def init_idle(self):
+        self.idle_start = rospy.get_rostime()
+
+    def has_idled(self):
+        return self.mode == Mode.IDLE and \
+               rospy.get_rostime() - self.idle_start > rospy.Duration.from_sec(self.params.crossing_time)
+
     ########## Code ends here ##########
 
 
@@ -419,12 +436,24 @@ class Supervisor:
         # EXPLORATION PHASE (INTEGRATE WITH CURRENT STATE MACHINE SHOULD BE SUFFICIENT)
         if self.mode == Mode.IDLE:
             # Send zero velocity
-            self.stay_idle()
+            if self.curr_wpt == 0:
+                self.x_g, self.y_g, self.theta_g = self.wpts[self.curr_wpt,:]
+                print("Waypoint {} loaded, {} waypoints to go".format(self.curr_wpt, self.wpt_count-self.curr_wpt - 1))
+                self.curr_wpt += 1
+                self.mode = Mode.NAV
+            elif self.curr_wpt == self.wpt_count: # THIS ASSUMES LAST WAYPT == STARTING PT
+                self.stay_idle()
+            elif self.has_idled():
+                self.x_g, self.y_g, self.theta_g = self.wpts[self.curr_wpt,:]
+                print("Waypoint {} loaded, {} waypoints to go".format(self.curr_wpt, self.wpt_count-self.curr_wpt - 1))
+                self.curr_wpt += 1
+                self.mode = Mode.NAV
 
         elif self.mode == Mode.POSE:
             # Moving towards a desired pose
             if self.close_to(self.x_g, self.y_g, self.theta_g):
                 self.mode = Mode.IDLE
+                self.init_idle()
             else:
                 self.go_to_pose()
 
@@ -443,7 +472,7 @@ class Supervisor:
             else:
                 self.nav_to_pose() # just go forward
 
-        elif self.mode == Mode.NAV: 
+        elif self.mode == Mode.NAV:
             
             if self.close_to(self.x_g, self.y_g, self.theta_g):
                 self.mode = Mode.POSE
@@ -461,6 +490,7 @@ class Supervisor:
 
     def run(self):
         rate = rospy.Rate(10) # 10 Hz
+        self.load_wpts("./savewaypts.txt")
         while not rospy.is_shutdown():
             self.loop()
             rate.sleep()
