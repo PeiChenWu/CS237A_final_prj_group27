@@ -11,6 +11,7 @@ from geometry_msgs.msg import Twist, PoseArray, Pose2D, PoseStamped
 from std_msgs.msg import Float32MultiArray, String
 import tf
 import numpy as np
+from visualization_msgs.msg import Marker
 
 # Suppress warning
 #warnings.filterwarnings("ignore", message="TF_REPEATED_DATA ignoring data with redundant timestamp ")
@@ -44,10 +45,10 @@ class SupervisorParams:
         self.theta_eps = rospy.get_param("~theta_eps", 0.3)
 
         # Time to stop at a stop sign
-        self.stop_time = rospy.get_param("~stop_time", 5.)
+        self.stop_time = rospy.get_param("~stop_time", 4.)
 
         # Minimum distance from a stop sign to obey it
-        self.stop_min_dist = rospy.get_param("~stop_min_dist", 0.5)
+        self.stop_min_dist = rospy.get_param("~stop_min_dist", 0.6)
 
         # Time taken to cross an intersection
         self.crossing_time = rospy.get_param("~crossing_time", 3.)
@@ -91,6 +92,7 @@ class Supervisor:
         self.wpt_count = 0
         self.curr_wpt  = 0
         self.wpts = None
+
         # User index to object id database
         self.usr_idx_to_obj = {
             51: "bowl",
@@ -110,31 +112,49 @@ class Supervisor:
         self.objs_to_be_rescued = []
          
 	# Waypoints
-        basedir = '/home/group27/catkin_ws/src/asl_turtlebot/scripts/'
-        self.fname=os.path.join(basedir, "waypts.txt")
-        print(self.fname)
-        self.waypts = []
+        self.save_waypt_flg = True  # This is to save waypts manually
+        if self.save_waypt_flg:
+          basedir = '/home/group27/catkin_ws/src/asl_turtlebot/scripts/'
+          self.fname=os.path.join(basedir, "manual_waypts.txt")
+          print(self.fname)
+          self.waypts = []
+
+        self.use_waypt_flg = False  # This is to use waypts 
+        if self.use_waypt_flg:
+          basedir = '/home/group27/catkin_ws/src/asl_turtlebot/scripts/'
+          self.fname=os.path.join(basedir, "savewaypts.txt")
+          print(self.fname)
+          
 
         ########## PUBLISHERS ##########
 
         # Command pose for controller
         self.pose_goal_publisher = rospy.Publisher('/cmd_pose', Pose2D, queue_size=10)
+        
+        
+        # Command nav for controller
+        self.nav_goal_publisher = rospy.Publisher('/cmd_nav', Pose2D, queue_size=10)
+        
+        
 
         # Command vel (used for idling)
         self.cmd_vel_publisher = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
         
+        
+        
         # MARKER PUBLISHER
+        self.marker_publisher = rospy.Publisher('/marker_topic', Marker, queue_size=10)
        
 
         ########## SUBSCRIBERS ##########
-        
+  
         # OBJECT LIST SUBSCRIBER (WILL NEED THIS FOR RESCUE PHASE)
         
 	# rescue command receiver # we can publish a string to /rescue_cmd, then inside the callback, we can create the object list and set the state to rescue state
         rospy.Subscriber('/rescue_cmd', String, self.rescue_cmd_callback)
         
         # bowl detector
-        rospy.Subscriber('/detector/bowl', DetectedObject, self.obj_detected_callback)
+        #rospy.Subscriber('/detector/bowl', DetectedObject, self.obj_detected_callback)
 
         # tv detector
         rospy.Subscriber('/detector/fire_hydrant', DetectedObject, self.obj_detected_callback)
@@ -160,7 +180,7 @@ class Supervisor:
         # If using gazebo, we have access to perfect state
         if self.params.use_gazebo:
             rospy.Subscriber('/gazebo/model_states', ModelStates, self.gazebo_callback)
-        self.trans_listener = tf.TransformListener()
+        #self.trans_listener = tf.TransformListener()
 
         # If using rviz, we can subscribe to nav goal click
         if self.params.rviz:
@@ -178,7 +198,7 @@ class Supervisor:
             self.x_g, self.y_g, self.theta_g = 1.5, -4., 0.
             self.mode = Mode.NAV
         
-        
+    # Called when an object is detected    
     def add_object_to_dict(self, dist, cl, obj_loc):
 	
         if cl in self.object_db.keys():
@@ -190,6 +210,10 @@ class Supervisor:
                 pose_obj_msg.x = obj_loc[0]
                 pose_obj_msg.y = obj_loc[1]
                 self.publisher_dict[cl].publish(pose_obj_msg)	
+                
+                ################## marker publisher function ##########################
+                self.marker_pub(cl,obj_loc[0],obj_loc[1])   # publish a marker on the detected object. However, the location is not perfect.
+                
         else:
             self.object_db[cl]  = [dist, (self.x, self.y, self.theta), (obj_loc)]
             print('add new item')
@@ -198,9 +222,49 @@ class Supervisor:
             pose_obj_msg.x = obj_loc[0]
             pose_obj_msg.y = obj_loc[1]
             self.publisher_dict[cl].publish(pose_obj_msg)	
+        
 
-    ########## SUBSCRIBER CALLBACKS ##########
+################## marker publisher function ##########################
+    def marker_pub(self, cl,x,y):
+        #rate = rospy.Rate(1)
+
+        #while not rospy.is_shutdown():
+        marker = Marker()
+
+        marker.header.frame_id = "map"
+        marker.header.stamp = rospy.Time()
+
+        # IMPORTANT: If you're creating multiple markers, each need to have a separate marker ID.
+        marker.id = cl
+        #print(marker.id)
+
+
+        marker.type = 1 # sphere
+
+        marker.pose.position.x = x 
+        marker.pose.position.y = y 
+        marker.pose.position.z = 2
+
+        marker.pose.orientation.x = 0.0
+        marker.pose.orientation.y = 0.0
+        marker.pose.orientation.z = 0.0
+        marker.pose.orientation.w = 1.0
+
+        marker.scale.x = 0.1
+        marker.scale.y = 0.1
+        marker.scale.z = 0.1
+
+        marker.color.a = 1.0 # Don't forget to set the alpha!
+        marker.color.r = 1.0
+        marker.color.g = 0.0
+        marker.color.b = 0.0
+
+        self.marker_publisher.publish(marker)
+        #print('Published marker!')
     
+    
+    ########## SUBSCRIBER CALLBACKS ##########    
+    # Only called when bot.command.py is executed    
     def rescue_cmd_callback(self, msg):
         self.objs_to_be_rescued = []
                 
@@ -299,12 +363,13 @@ class Supervisor:
                           nav_pose_origin.pose.orientation.w)
             euler = tf.transformations.euler_from_quaternion(quaternion)
             self.theta_g = euler[2]
-            
-            print("We should append to the waypts file")
-            print(self.x_g, self.y_g, self.theta_g)
-            self.waypts.append((self.x_g, self.y_g, self.theta_g))
+           
+            if self.save_waypt_flg: 
+              print("We should append to the waypts file")
+              print(self.x_g, self.y_g, self.theta_g)
+              self.waypts.append((self.x_g, self.y_g, self.theta_g))
 
-            np.savetxt(self.fname, np.array(self.waypts), delimiter=' ')
+              np.savetxt(self.fname, np.array(self.waypts), delimiter=' ')
 
             #with open("waypts.txt", "a") as wayptfile:
             #    wayptfile.write('Waypoint\n')
@@ -321,6 +386,7 @@ class Supervisor:
         print("{} Waypoints loaded".format(self.wpt_count))
         print(self.wpts)
 
+    # Only called when bot.command.py is executed
     def rescue_wpts(self):
         start_pt = self.wpts[-1,:] # loaded from waypoint file's last waypoint
         self.wpts = np.zeros((len(self.objs_to_be_rescued) + 1, 3))
@@ -380,7 +446,7 @@ class Supervisor:
         nav_g_msg.y = self.y_g
         nav_g_msg.theta = self.theta_g
 
-        self.pose_goal_publisher.publish(nav_g_msg)
+        self.nav_goal_publisher.publish(nav_g_msg)
 
     def stay_idle(self):
         """ sends zero velocity to stay put """
@@ -424,7 +490,7 @@ class Supervisor:
 
     def has_idled(self):
         return self.mode == Mode.IDLE and \
-               rospy.get_rostime() - self.idle_start > rospy.Duration.from_sec(self.params.crossing_time)
+               rospy.get_rostime() - self.idle_start > rospy.Duration.from_sec(self.params.stop_time)
 
     ########## Code ends here ##########
     
@@ -455,19 +521,22 @@ class Supervisor:
         
         # EXPLORATION PHASE (INTEGRATE WITH CURRENT STATE MACHINE SHOULD BE SUFFICIENT)
         if self.mode == Mode.IDLE:
-            # Send zero velocity
-            if self.curr_wpt == 0:
-                self.x_g, self.y_g, self.theta_g = self.wpts[self.curr_wpt,:]
-                print("Waypoint {} loaded, {} waypoints to go".format(self.curr_wpt, self.wpt_count-self.curr_wpt - 1))
-                self.curr_wpt += 1
-                self.mode = Mode.NAV
-            elif self.curr_wpt == self.wpt_count: # THIS ASSUMES LAST WAYPT == STARTING PT
-                self.stay_idle()
-            elif self.has_idled():
-                self.x_g, self.y_g, self.theta_g = self.wpts[self.curr_wpt,:]
-                print("Waypoint {} loaded, {} waypoints to go".format(self.curr_wpt, self.wpt_count-self.curr_wpt - 1))
-                self.curr_wpt += 1
-                self.mode = Mode.NAV
+            if self.use_waypt_flg: 
+              # Send zero velocity
+              if self.curr_wpt == 0:
+                 self.x_g, self.y_g, self.theta_g = self.wpts[self.curr_wpt,:]
+                 print("Waypoint {} loaded, {} waypoints to go".format(self.curr_wpt, self.wpt_count-self.curr_wpt - 1))
+                 self.curr_wpt += 1
+                 self.mode = Mode.NAV
+              elif self.curr_wpt == self.wpt_count: # THIS ASSUMES LAST WAYPT == STARTING PT
+                 self.stay_idle()
+              elif self.has_idled():
+                 self.x_g, self.y_g, self.theta_g = self.wpts[self.curr_wpt,:]
+                 print("Waypoint {} loaded, {} waypoints to go".format(self.curr_wpt, self.wpt_count-self.curr_wpt - 1))
+                 self.curr_wpt += 1
+                 self.mode = Mode.NAV
+            else: 
+              self.stay_idle()
 
         elif self.mode == Mode.POSE:
             # Moving towards a desired pose
@@ -510,7 +579,8 @@ class Supervisor:
 
     def run(self):
         rate = rospy.Rate(10) # 10 Hz
-        self.load_wpts("./savewaypts.txt")
+        if self.use_waypt_flg:
+          self.load_wpts(self.fname)
         while not rospy.is_shutdown():
             self.loop()
             rate.sleep()

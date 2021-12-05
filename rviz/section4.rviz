@@ -125,9 +125,11 @@ Visualization Manager:
       Value: true
       Visibility:
         Axes: true
+        Dilated_Map: true
         Grid: true
         LaserScan: true
         Map: true
+        Obj_Marker: true
         Odometry: true
         Path: true
         TF: true
@@ -252,6 +254,24 @@ Visualization Manager:
       Topic: /cmd_smoothed_path
       Unreliable: false
       Value: true
+    - Alpha: 0.699999988079071
+      Class: rviz/Map
+      Color Scheme: map
+      Draw Behind: false
+      Enabled: true
+      Name: Dilated_Map
+      Topic: /dilated_map
+      Unreliable: false
+      Use Timestamp: false
+      Value: true
+    - Class: rviz/Marker
+      Enabled: true
+      Marker Topic: /marker_topic
+      Name: Obj_Marker
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -312,5 +332,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1542
-  X: 22
-  Y: 0
+  X: 20
+  Y: -32

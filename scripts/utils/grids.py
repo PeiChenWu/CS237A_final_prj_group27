@@ -33,7 +33,7 @@ class DetOccupancyGrid2D(object):
 
 class StochOccupancyGrid2D(object):
     def __init__(self, resolution, width, height, origin_x, origin_y,
-                window_size, probs, thresh=0.3):
+                window_size, probs, thresh=0.5):
         self.resolution = resolution
         self.width = width
         self.height = height
@@ -74,3 +74,4 @@ class StochOccupancyGrid2D(object):
                 pts.append((x,y))
         pts_array = np.array(pts)
         plt.scatter(pts_array[:,0],pts_array[:,1],color="red",zorder=15,label='planning resolution')
+        #plt.savefig("map_test.png")

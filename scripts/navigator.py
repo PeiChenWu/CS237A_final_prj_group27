@@ -60,8 +60,9 @@ class Navigator:
         self.occupancy_updated = False
 
         # plan parameters
-        self.plan_resolution = 0.15 #0.1
+        self.plan_resolution = 0.05 #0.1
         self.plan_horizon = 15
+
 
         # time when we started following the plan
         self.current_plan_start_time = rospy.get_rostime()
@@ -69,11 +70,11 @@ class Navigator:
         self.plan_start = [0.0, 0.0]
 
         # Robot limits
-        self.v_max = 0.5  # maximum velocity
+        self.v_max = 0.2  # maximum velocity
         self.om_max = 0.4  # maximum angular velocity
 
-        self.v_des = 0.18 #0.12  # desired cruising velocity
-        self.theta_start_thresh = 0.05  # threshold in theta to start moving forward when path-following
+        self.v_des = 0.12 #0.12  # desired cruising velocity
+        self.theta_start_thresh = 0.03  # threshold in theta to start moving forward when path-following
         self.start_pos_thresh = (
             0.2  # threshold to be far enough into the plan to recompute it
         )
@@ -84,17 +85,17 @@ class Navigator:
         self.at_thresh_theta = 0.1
 
         # trajectory smoothing
-        self.spline_alpha = 0.05 # 0.15
+        self.spline_alpha = 0.01 # 0.15
         self.traj_dt = 0.1
 
         # trajectory tracking controller parameters
-        self.kpx = 10.0 #0.5
-        self.kpy = 10.0 #0.5
-        self.kdx = 20.0 #1.5
-        self.kdy = 20.0 #1.5
+        self.kpx = 2.0 #20.0 #0.5
+        self.kpy = 2.0 #20.0 #0.5
+        self.kdx = 4 #30.0 #1.5
+        self.kdy = 4 #30.0 #1.5
 
         # heading controller parameters
-        self.kp_th = 10.0 #2.0
+        self.kp_th = 4 #15.0 #2.0
 
         self.traj_controller = TrajectoryTracker(
             self.kpx, self.kpy, self.kdx, self.kdy, self.v_max, self.om_max
@@ -124,6 +125,8 @@ class Navigator:
 
         self.cfg_srv = Server(NavigatorConfig, self.dyn_cfg_callback)
         
+        
+
         
         
         ###########  THIS IS FOR MAP DILATION  ###############
@@ -177,11 +180,11 @@ class Navigator:
     
     
     def dilate_map_callback(self, msg):
-        print(type(msg.data))
+        #print(type(msg.data))
         original_map = np.array(msg.data) # probablity in row vector
         length = original_map.shape[0] # len(original_map)
         original_map = original_map.reshape(int(round(np.sqrt(length))), int(round(np.sqrt(length))))
-        dilated_map = grey_dilation(original_map, size = (10,10)) # from scipy dilation
+        dilated_map = grey_dilation(original_map, size = (6,6)) # from scipy dilation
         dilated_map = dilated_map.reshape(int(round(np.sqrt(length)))*int(round(np.sqrt(length))))
         dilated_msg = OccupancyGrid()
         dilated_msg.info = msg.info
@@ -194,7 +197,7 @@ class Navigator:
         """
         receives new map info and updates the map
         """
-        print(np.array(msg.data).shape)
+        #print(np.array(msg.data).shape)
         self.map_probs = msg.data
         # if we've received the map metadata and have a way to update it:
         if (
@@ -208,11 +211,12 @@ class Navigator:
                 self.map_height,
                 self.map_origin[0],
                 self.map_origin[1],
-                8,
+                2,
                 self.map_probs,
             )
             if self.x_g is not None:
                 # if we have a goal to plan to, replan
+                print("New goal is: ", self.x_g, self.y_g, self.theta_g)
                 rospy.loginfo("replanning because of new map")
                 self.replan()  # new map, need to replan
 
@@ -351,9 +355,13 @@ class Navigator:
         # Attempt to plan a path
         state_min = self.snap_to_grid((-self.plan_horizon, -self.plan_horizon))
         state_max = self.snap_to_grid((self.plan_horizon, self.plan_horizon))
+        #print(state_min)
+        #print(state_max)
         x_init = self.snap_to_grid((self.x, self.y))
         self.plan_start = x_init
+        #print(x_init)
         x_goal = self.snap_to_grid((self.x_g, self.y_g))
+        #print(x_goal)
         problem = AStar(
             state_min,
             state_max,
