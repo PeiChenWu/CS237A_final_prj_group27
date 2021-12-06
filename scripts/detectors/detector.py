@@ -46,7 +46,7 @@ class DetectorParams:
         self.label_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), label_path)
 
         # Minimum score for positive detection
-        self.min_score = rospy.get_param("~min_score", 0.6)
+        self.min_score = rospy.get_param("~min_score", 0.7)
 
         if verbose:
             print("DetectorParams:")

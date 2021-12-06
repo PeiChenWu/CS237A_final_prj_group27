@@ -114,7 +114,8 @@ class Navigator:
         self.nav_smoothed_path_rej_pub = rospy.Publisher(
             "/cmd_smoothed_path_rejected", Path, queue_size=10
         )
-        self.nav_vel_pub = rospy.Publisher("/cmd_vel", Twist, queue_size=10)
+        #self.nav_vel_pub = rospy.Publisher("/cmd_vel", Twist, queue_size=10)
+        self.nav_vel_pub = rospy.Publisher("/nav_cmd_vel", Twist, queue_size=10)
 
         self.trans_listener = tf.TransformListener()
 

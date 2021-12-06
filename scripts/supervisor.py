@@ -45,10 +45,10 @@ class SupervisorParams:
         self.theta_eps = rospy.get_param("~theta_eps", 0.3)
 
         # Time to stop at a stop sign
-        self.stop_time = rospy.get_param("~stop_time", 4.)
+        self.stop_time = rospy.get_param("~stop_time", 5.)
 
         # Minimum distance from a stop sign to obey it
-        self.stop_min_dist = rospy.get_param("~stop_min_dist", 0.6)
+        self.stop_min_dist = rospy.get_param("~stop_min_dist", 0.5)
 
         # Time taken to cross an intersection
         self.crossing_time = rospy.get_param("~crossing_time", 3.)
@@ -93,6 +93,8 @@ class Supervisor:
         self.curr_wpt  = 0
         self.wpts = None
 
+        self.initial_flg = False  # This is the flag to save the initial pt
+
         # User index to object id database
         self.usr_idx_to_obj = {
             51: "bowl",
@@ -112,14 +114,14 @@ class Supervisor:
         self.objs_to_be_rescued = []
          
 	# Waypoints
-        self.save_waypt_flg = True  # This is to save waypts manually
+        self.save_waypt_flg = False  # This is to save waypts manually
         if self.save_waypt_flg:
           basedir = '/home/group27/catkin_ws/src/asl_turtlebot/scripts/'
           self.fname=os.path.join(basedir, "manual_waypts.txt")
           print(self.fname)
           self.waypts = []
 
-        self.use_waypt_flg = False  # This is to use waypts 
+        self.use_waypt_flg = True  # This is to use waypts 
         if self.use_waypt_flg:
           basedir = '/home/group27/catkin_ws/src/asl_turtlebot/scripts/'
           self.fname=os.path.join(basedir, "savewaypts.txt")
@@ -202,7 +204,7 @@ class Supervisor:
     def add_object_to_dict(self, dist, cl, obj_loc):
 	
         if cl in self.object_db.keys():
-            if abs(dist-self.object_db[cl][0])<0.1 and (dist<self.object_db[cl][0]):
+            if abs(dist-self.object_db[cl][0])>0.1 and (dist<self.object_db[cl][0]):
                 self.object_db[cl]  = [dist, [self.x, self.y, self.theta], (obj_loc)]
                 print('update existing item')
                 print(self.object_db)
@@ -212,7 +214,8 @@ class Supervisor:
                 self.publisher_dict[cl].publish(pose_obj_msg)	
                 
                 ################## marker publisher function ##########################
-                self.marker_pub(cl,obj_loc[0],obj_loc[1])   # publish a marker on the detected object. However, the location is not perfect.
+                if cl != 13:
+                    self.marker_pub(cl,obj_loc[0],obj_loc[1])   # publish a marker on the detected object. However, the location is not perfect.
                 
         else:
             self.object_db[cl]  = [dist, (self.x, self.y, self.theta), (obj_loc)]
@@ -275,15 +278,73 @@ class Supervisor:
             obj_id = int(idx)
             if obj_id in self.usr_idx_to_obj :
                 obj_name = self.usr_idx_to_obj[obj_id]
-                rospy.loginfo('Adding ' + obj_name + " to rescue list")
+                x, y, theta = self.object_db[obj_id][1]
+                rospy.loginfo('Adding ' + obj_name + " to rescue list. x: " + str(x) + " y: " + str(y) + " theta:" + str(theta))
                 self.objs_to_be_rescued.append(obj_id)
             else:
                 rospy.logwarn('Cannot find object mapping for index: ' + str(idx))
         
         if self.objs_to_be_rescued:
 	        self.rescue_wpts()
-	        
+    
     def obj_detected_callback(self,  msg):
+        self.obj_detected_callback_wo_tf(msg)
+        #self.obj_detected_callback_tf(msg)
+    
+    def obj_detected_callback_tf(self,  msg):
+        cl  = msg.id
+        
+        d = msg.distance
+        thetaleft = msg.thetaleft
+        thetaright = msg.thetaright
+        
+        #position of the object in the camera frame
+        theta = thetaright + (thetaleft - thetaright) / 2
+        x_c = d * np.cos(theta) 
+        y_c = d * np.sin(theta)
+        z_c = 0
+        x_c_t = np.array([x_c, y_c, z_c, 1])
+        
+        print(f'robot @ x:{self.x}, y:{self.y}, theta:{self.theta}')
+        print(f'd:{d}, thetaleft:{thetaleft}, thetaright:{thetaright}')
+        
+        try:
+            # 1. Camera to robot frame
+            (trans1, rot1) = self.trans_listener.lookupTransform('/base_link', '/base_camera',rospy.Time(0))
+            _, _, theta_z1 = tf.transformations.euler_from_quaternion(rot1)
+            
+            #transformation from camera frame to robot frame 
+            T_RC = np.array([
+            [np.cos(theta_z1), -np.sin(theta_z1), 0, trans1[0]], 
+            [np.sin(theta_z1),  np.cos(theta_z1), 0, trans1[1]], 
+            [0,                                0, 1, trans1[2]], 
+            [0,                                0, 0,        1],
+            ])
+            
+            x_r_t = T_RC @ x_c_t  #co-ordinates in robot frame
+               
+            # 2. Robot frame to map frame
+            (trans, rot) = self.trans_listener.lookupTransform('map', '/base_link', rospy.Time(0))
+            _, _, theta_z = tf.transformations.euler_from_quaternion(rot)
+            
+            #Rotation from robot frame to map
+            T_MR = np.array([
+            [np.cos(theta_z), -np.sin(theta_z), 0, trans[0]], 
+            [np.sin(theta_z),  np.cos(theta_z), 0, trans[1]], 
+            [0,                              0, 1, trans[2]], 
+            [0,                              0, 0,        1],
+            ])
+             
+            x_m = T_MR @ x_r_t # object in map co-ordinates
+            x_m = x_m[0:3]
+            
+            self.add_object_to_dict(d, cl, x_m)            
+            print(f'object in map frame @ {x_m}')
+            
+        except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
+            pass
+
+    def obj_detected_callback_wo_tf(self,  msg):
         cl  = msg.id
         
         d = msg.distance
@@ -345,6 +406,12 @@ class Supervisor:
         quaternion = (pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w)
         euler = tf.transformations.euler_from_quaternion(quaternion)
         self.theta = euler[2]
+        if self.initial_flg:
+          a =  np.array([[self.x, self.y, self.theta]])
+          with open(self.fname, "ab") as f:
+            np.savetxt(f, a)
+          self.initial_flg = False
+          #np.savetxt(self.fname, total_waypts)
         #print("Gazebo initial point")
         #print(self.x, self.y, self.theta)
 
@@ -414,6 +481,7 @@ class Supervisor:
 
         # distance of the stop sign
         dist = msg.distance
+        
 
 
         # if close enough and in nav mode, stop
