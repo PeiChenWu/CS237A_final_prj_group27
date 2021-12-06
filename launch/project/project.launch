@@ -18,9 +18,13 @@
     <arg name="model" default="asl_turtlebot"/>
     <arg name="sim" default="$(arg sim)"/>
   </include>
+  
+  <arg name="kbd_flg" default="false"/>
 
   <node pkg="asl_turtlebot" type="detector.py" name="turtlebot_detector"/>
   <node pkg="asl_turtlebot" type="pose_controller.py" name="turtlebot_pose_controller"/>
+  <node pkg="asl_turtlebot" type="SwitchingController.py" name="turtlebot_switch_controller">
+  </node>
 
 <?ignore
   <node pkg="asl_turtlebot" type="navigator.py" name="navigator" output="screen"/>
