@@ -15,7 +15,7 @@ import scipy.interpolate
 import matplotlib.pyplot as plt
 from controllers import PoseController, TrajectoryTracker, HeadingController
 from enum import Enum
-
+from sensor_msgs.msg import LaserScan
 
 from dynamic_reconfigure.server import Server
 from asl_turtlebot.cfg import NavigatorConfig
@@ -115,20 +115,16 @@ class Navigator:
             "/cmd_smoothed_path_rejected", Path, queue_size=10
         )
         self.nav_vel_pub = rospy.Publisher("/cmd_vel", Twist, queue_size=10)
-        
-        
-        
-        
-        
 
         self.trans_listener = tf.TransformListener()
 
         self.cfg_srv = Server(NavigatorConfig, self.dyn_cfg_callback)
         
-        
+        ############# LASER SCAN SUBSCRIPTION ################
+        rospy.Subscriber('/scan', LaserScan, self.laser_callback)
+        self.distance_to_obstacle = None
+        self.distance_to_obstacle_threshold = 0.2 #tuning parameter.Make sure we take into account map dilation
 
-        
-        
         ###########  THIS IS FOR MAP DILATION  ###############
         # add a publisher for map dilation
         self.map_dilation_pub = rospy.Publisher("/dilated_map", OccupancyGrid, queue_size=10)
@@ -143,6 +139,18 @@ class Navigator:
         rospy.Subscriber("/cmd_nav", Pose2D, self.cmd_nav_callback)
 
         print("finished init")
+
+    def laser_callback(self, msg):
+        """ callback for thr laser rangefinder """
+
+        # index 0 corresponds to the head ie. angle = 0
+        self.distance_to_obstacle = msg.ranges[0]
+
+    def is_near_to_obstacle(self):
+        if self.distance_to_obstacle is None:
+            return False
+
+        return self.distance_to_obstacle < self.distance_to_obstacle_threshold
 
     def dyn_cfg_callback(self, config, level):
         rospy.loginfo(
@@ -175,10 +183,7 @@ class Navigator:
         self.map_height = msg.height
         self.map_resolution = msg.resolution
         self.map_origin = (msg.origin.position.x, msg.origin.position.y)
-        
-    
-    
-    
+
     def dilate_map_callback(self, msg):
         #print(type(msg.data))
         original_map = np.array(msg.data) # probablity in row vector
@@ -470,6 +475,9 @@ class Navigator:
                 elif not self.close_to_plan_start():
                     rospy.loginfo("replanning because far from start")
                     self.replan()
+                elif self.is_near_to_obstacle():
+                    rospy.loginfo("Close to obstacle")
+                    self.switch_mode(Mode.ALIGN)
                 elif (
                     rospy.get_rostime() - self.current_plan_start_time
                 ).to_sec() > self.current_plan_duration:
