@@ -114,19 +114,18 @@ class Supervisor:
         self.objs_to_be_rescued = []
          
 	# Waypoints
-        self.save_waypt_flg = False  # This is to save waypts manually
+        self.save_waypt_flg = True  # This is to save waypts manually
         if self.save_waypt_flg:
           basedir = '/home/group27/catkin_ws/src/asl_turtlebot/scripts/'
           self.fname=os.path.join(basedir, "manual_waypts.txt")
           print(self.fname)
           self.waypts = []
 
-        self.use_waypt_flg = True  # This is to use waypts 
+        self.use_waypt_flg = False  # This is to use waypts 
         if self.use_waypt_flg:
           basedir = '/home/group27/catkin_ws/src/asl_turtlebot/scripts/'
           self.fname=os.path.join(basedir, "savewaypts.txt")
           print(self.fname)
-          
 
         ########## PUBLISHERS ##########
 
@@ -204,7 +203,7 @@ class Supervisor:
     def add_object_to_dict(self, dist, cl, obj_loc):
 	
         if cl in self.object_db.keys():
-            if abs(dist-self.object_db[cl][0])>0.1 and (dist<self.object_db[cl][0]):
+            if abs(dist-self.object_db[cl][0])>0.05 and (dist<self.object_db[cl][0]):
                 self.object_db[cl]  = [dist, [self.x, self.y, self.theta], (obj_loc)]
                 print('update existing item')
                 print(self.object_db)
