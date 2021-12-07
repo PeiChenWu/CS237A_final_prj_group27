@@ -73,7 +73,7 @@ class Navigator:
         self.v_max = 0.2  # maximum velocity
         self.om_max = 0.4  # maximum angular velocity
 
-        self.v_des = 0.15 #0.15 #0.12  # desired cruising velocity
+        self.v_des = 0.14 #0.15 #0.12  # desired cruising velocity
         self.theta_start_thresh = 0.05 #0.02 #0.05 # threshold in theta to start moving forward when path-following
         self.start_pos_thresh = (
             0.2  # threshold to be far enough into the plan to recompute it
@@ -85,12 +85,12 @@ class Navigator:
         self.at_thresh_theta = 0.1
 
         # trajectory smoothing
-        self.spline_alpha = 0.005 #0.01 # 0.15
+        self.spline_alpha = 0.01 #0.01 # 0.15
         self.traj_dt = 0.1
 
         # trajectory tracking controller parameters
-        self.kpx = 4.0 #6.0 #2.0 #20.0 #0.5
-        self.kpy = 4.0 #6.0 #2.0 #20.0 #0.5
+        self.kpx = 2.0 #6.0 #2.0 #20.0 #0.5
+        self.kpy = 2.0 #6.0 #2.0 #20.0 #0.5
         self.kdx = 5.0 #8.0 #4 #30.0 #1.5
         self.kdy = 5.0 #8.0 #4 #30.0 #1.5
 
