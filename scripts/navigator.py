@@ -73,8 +73,8 @@ class Navigator:
         self.v_max = 0.2  # maximum velocity
         self.om_max = 0.4  # maximum angular velocity
 
-        self.v_des = 0.12 #0.12  # desired cruising velocity
-        self.theta_start_thresh = 0.03  # threshold in theta to start moving forward when path-following
+        self.v_des = 0.15 #0.15 #0.12  # desired cruising velocity
+        self.theta_start_thresh = 0.05 #0.02 #0.05 # threshold in theta to start moving forward when path-following
         self.start_pos_thresh = (
             0.2  # threshold to be far enough into the plan to recompute it
         )
@@ -85,17 +85,17 @@ class Navigator:
         self.at_thresh_theta = 0.1
 
         # trajectory smoothing
-        self.spline_alpha = 0.01 # 0.15
+        self.spline_alpha = 0.005 #0.01 # 0.15
         self.traj_dt = 0.1
 
         # trajectory tracking controller parameters
-        self.kpx = 2.0 #20.0 #0.5
-        self.kpy = 2.0 #20.0 #0.5
-        self.kdx = 4 #30.0 #1.5
-        self.kdy = 4 #30.0 #1.5
+        self.kpx = 4.0 #6.0 #2.0 #20.0 #0.5
+        self.kpy = 4.0 #6.0 #2.0 #20.0 #0.5
+        self.kdx = 5.0 #8.0 #4 #30.0 #1.5
+        self.kdy = 5.0 #8.0 #4 #30.0 #1.5
 
         # heading controller parameters
-        self.kp_th = 4 #15.0 #2.0
+        self.kp_th = 4.0 #3.5 #4.0 #15.0 #2.0
 
         self.traj_controller = TrajectoryTracker(
             self.kpx, self.kpy, self.kdx, self.kdy, self.v_max, self.om_max
@@ -124,7 +124,7 @@ class Navigator:
         ############# LASER SCAN SUBSCRIPTION ################
         rospy.Subscriber('/scan', LaserScan, self.laser_callback)
         self.distance_to_obstacle = None
-        self.distance_to_obstacle_threshold = 0.2 #tuning parameter.Make sure we take into account map dilation
+        self.distance_to_obstacle_threshold = 0.3 #0.2 #tuning parameter.Make sure we take into account map dilation
 
         ###########  THIS IS FOR MAP DILATION  ###############
         # add a publisher for map dilation
