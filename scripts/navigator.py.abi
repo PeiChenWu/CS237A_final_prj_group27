@@ -25,7 +25,8 @@ class Mode(Enum):
     IDLE = 0
     ALIGN = 1
     TRACK = 2
-    PARK = 3
+    PARK = 3,
+    NEAR_OBSTACLE = 4
 
 
 class Navigator:
@@ -73,7 +74,7 @@ class Navigator:
         self.v_max = 0.2  # maximum velocity
         self.om_max = 0.4  # maximum angular velocity
 
-        self.v_des = 0.14 #0.14 #0.16 #0.14 #0.15 #0.12  # desired cruising velocity
+        self.v_des = 0.15 #0.15 #0.12  # desired cruising velocity
         self.theta_start_thresh = 0.05 #0.02 #0.05 # threshold in theta to start moving forward when path-following
         self.start_pos_thresh = (
             0.2  # threshold to be far enough into the plan to recompute it
@@ -85,12 +86,12 @@ class Navigator:
         self.at_thresh_theta = 0.1
 
         # trajectory smoothing
-        self.spline_alpha = 0.01 #0.01 # 0.15
+        self.spline_alpha = 0.005 #0.01 # 0.15
         self.traj_dt = 0.1
 
         # trajectory tracking controller parameters
-        self.kpx = 2.0 #6.0 #2.0 #20.0 #0.5
-        self.kpy = 2.0 #6.0 #2.0 #20.0 #0.5
+        self.kpx = 4.0 #6.0 #2.0 #20.0 #0.5
+        self.kpy = 4.0 #6.0 #2.0 #20.0 #0.5
         self.kdx = 5.0 #8.0 #4 #30.0 #1.5
         self.kdy = 5.0 #8.0 #4 #30.0 #1.5
 
@@ -160,9 +161,6 @@ class Navigator:
         self.pose_controller.k1 = config["k1"]
         self.pose_controller.k2 = config["k2"]
         self.pose_controller.k3 = config["k3"]
-        #print(self.pose_controller.k1)
-        #print(self.pose_controller.k2)
-        #print(self.pose_controller.k3)
         return config
 
     def cmd_nav_callback(self, data):
@@ -317,7 +315,7 @@ class Navigator:
         """
         t = self.get_current_plan_time()
 
-        if self.mode == Mode.PARK:
+        if self.mode == Mode.PARK or self.mode == Mode.NEAR_OBSTACLE:
             V, om = self.pose_controller.compute_control(
                 self.x, self.y, self.theta, t
             )
@@ -481,7 +479,7 @@ class Navigator:
                     self.replan()
                 elif self.is_near_to_obstacle():
                     rospy.loginfo("Close to obstacle")
-                    self.switch_mode(Mode.ALIGN)
+                    self.switch_mode(Mode.NEAR_OBSTACLE)
                 elif (
                     rospy.get_rostime() - self.current_plan_start_time
                 ).to_sec() > self.current_plan_duration:
@@ -494,6 +492,10 @@ class Navigator:
                     self.y_g = None
                     self.theta_g = None
                     self.switch_mode(Mode.IDLE)
+            elif self.mode == Mode.NEAR_OBSTACLE:
+                if not self.is_near_to_obstacle() and self.occupancy.is_free(self.x, self.y):
+                    self.replan()
+                    self.switch_mode(Mode.TRACK)
 
             self.publish_control()
             rate.sleep()

@@ -1,0 +1,867 @@
+[0m[ INFO] [1638555749.608443208, 3546.415000000]: Laser is mounted upwards.[0m
+ -maxUrange 4 -maxUrange 9.99 -sigma     0.05 -kernelSize 1 -lstep 0.05 -lobsGain 3 -astep 0.05
+ -srr 0.01 -srt 0.02 -str 0.01 -stt 0.02
+ -linearUpdate 0.2 -angularUpdate 0.2 -resampleThreshold 0.5
+ -xmin -10 -xmax 10 -ymin -10 -ymax 10 -delta 0.05 -particles 120
+[0m[ INFO] [1638555749.612771795, 3546.418000000]: Initialization complete[0m
+update frame 0
+update ld=0 ad=0
+m_count 0
+Registering First Scan
+update frame 50
+update ld=0.00238097 ad=5.8688e-06
+m_count 1
+Average Scan Matching Score=358.752
+neff= 120
+update frame 64
+update ld=0.000606174 ad=5.61245e-06
+m_count 2
+Average Scan Matching Score=358.765
+neff= 120
+update frame 81
+update ld=1.41238e-06 ad=5.49934e-06
+m_count 3
+Average Scan Matching Score=358.77
+neff= 120
+update frame 94
+update ld=1.44776e-06 ad=5.63712e-06
+m_count 4
+Average Scan Matching Score=358.765
+neff= 120
+update frame 109
+update ld=1.44825e-06 ad=5.63906e-06
+m_count 5
+Average Scan Matching Score=358.787
+neff= 120
+update frame 128
+update ld=1.43938e-06 ad=5.60452e-06
+m_count 6
+Average Scan Matching Score=358.787
+neff= 120
+update frame 145
+update ld=1.4065e-06 ad=5.47654e-06
+m_count 7
+Average Scan Matching Score=358.788
+neff= 120
+update frame 160
+update ld=1.44741e-06 ad=5.63583e-06
+m_count 8
+Average Scan Matching Score=358.783
+neff= 120
+update frame 173
+update ld=1.44197e-06 ad=5.61467e-06
+m_count 9
+Average Scan Matching Score=358.792
+neff= 120
+update frame 187
+update ld=1.44788e-06 ad=5.63772e-06
+m_count 10
+Average Scan Matching Score=358.789
+neff= 120
+update frame 205
+update ld=1.44528e-06 ad=5.6276e-06
+m_count 11
+Average Scan Matching Score=358.801
+neff= 120
+update frame 223
+update ld=1.42874e-06 ad=5.56319e-06
+m_count 12
+Average Scan Matching Score=358.798
+neff= 120
+update frame 232
+update ld=1.44549e-06 ad=5.62846e-06
+m_count 13
+Average Scan Matching Score=358.795
+neff= 120
+update frame 245
+update ld=1.43178e-06 ad=5.5751e-06
+m_count 14
+Average Scan Matching Score=358.795
+neff= 120
+update frame 263
+update ld=1.44907e-06 ad=5.6424e-06
+m_count 15
+Average Scan Matching Score=358.791
+neff= 120
+update frame 280
+update ld=1.42941e-06 ad=5.56588e-06
+m_count 16
+Average Scan Matching Score=358.796
+neff= 120
+update frame 295
+update ld=1.43217e-06 ad=5.57664e-06
+m_count 17
+Average Scan Matching Score=358.792
+neff= 120
+update frame 309
+update ld=1.4245e-06 ad=5.54681e-06
+m_count 18
+Average Scan Matching Score=358.8
+neff= 120
+update frame 327
+update ld=1.45001e-06 ad=5.64614e-06
+m_count 19
+Average Scan Matching Score=358.8
+neff= 120
+update frame 344
+update ld=1.44456e-06 ad=5.62493e-06
+m_count 20
+Average Scan Matching Score=358.805
+neff= 120
+update frame 358
+update ld=1.44479e-06 ad=5.62587e-06
+m_count 21
+Average Scan Matching Score=358.806
+neff= 120
+update frame 372
+update ld=1.45072e-06 ad=5.64896e-06
+m_count 22
+Average Scan Matching Score=358.806
+neff= 120
+update frame 386
+update ld=1.44242e-06 ad=5.61667e-06
+m_count 23
+Average Scan Matching Score=358.801
+neff= 120
+update frame 404
+update ld=1.43696e-06 ad=5.59544e-06
+m_count 24
+Average Scan Matching Score=358.797
+neff= 120
+update frame 420
+update ld=1.44936e-06 ad=5.64372e-06
+m_count 25
+Average Scan Matching Score=358.803
+neff= 120
+update frame 431
+update ld=1.45089e-06 ad=5.6497e-06
+m_count 26
+Average Scan Matching Score=358.804
+neff= 120
+update frame 446
+update ld=1.45475e-06 ad=5.66475e-06
+m_count 27
+Average Scan Matching Score=358.8
+neff= 120
+update frame 460
+update ld=1.45214e-06 ad=5.65461e-06
+m_count 28
+Average Scan Matching Score=358.806
+neff= 120
+update frame 479
+update ld=1.45238e-06 ad=5.65556e-06
+m_count 29
+Average Scan Matching Score=358.801
+neff= 120
+update frame 490
+update ld=1.42698e-06 ad=5.55667e-06
+m_count 30
+Average Scan Matching Score=358.804
+neff= 120
+update frame 506
+update ld=1.43006e-06 ad=5.56868e-06
+m_count 31
+Average Scan Matching Score=358.795
+neff= 120
+update frame 521
+update ld=1.45309e-06 ad=5.65836e-06
+m_count 32
+Average Scan Matching Score=358.809
+neff= 120
+update frame 535
+update ld=1.45333e-06 ad=5.65931e-06
+m_count 33
+Average Scan Matching Score=358.795
+neff= 120
+update frame 553
+update ld=1.45357e-06 ad=5.66025e-06
+m_count 34
+Average Scan Matching Score=358.794
+neff= 120
+update frame 563
+update ld=1.42815e-06 ad=5.56129e-06
+m_count 35
+Average Scan Matching Score=358.803
+neff= 120
+update frame 581
+update ld=1.43019e-06 ad=5.56926e-06
+m_count 36
+Average Scan Matching Score=358.801
+neff= 120
+update frame 602
+update ld=1.45427e-06 ad=5.66306e-06
+m_count 37
+Average Scan Matching Score=358.803
+neff= 120
+update frame 621
+update ld=1.43118e-06 ad=5.57313e-06
+m_count 38
+Average Scan Matching Score=358.796
+neff= 120
+update frame 638
+update ld=1.42778e-06 ad=5.55991e-06
+m_count 39
+Average Scan Matching Score=358.794
+neff= 120
+update frame 654
+update ld=1.45602e-06 ad=5.6699e-06
+m_count 40
+Average Scan Matching Score=358.794
+neff= 120
+update frame 668
+update ld=1.45704e-06 ad=5.67388e-06
+m_count 41
+Average Scan Matching Score=358.795
+neff= 120
+update frame 690
+update ld=1.4526e-06 ad=5.65664e-06
+m_count 42
+Average Scan Matching Score=358.794
+neff= 120
+update frame 711
+update ld=1.43001e-06 ad=5.56866e-06
+m_count 43
+Average Scan Matching Score=358.79
+neff= 120
+update frame 730
+update ld=1.45593e-06 ad=5.66963e-06
+m_count 44
+Average Scan Matching Score=358.804
+neff= 120
+update frame 747
+update ld=1.45522e-06 ad=5.66687e-06
+m_count 45
+Average Scan Matching Score=358.798
+neff= 120
+update frame 762
+update ld=1.4288e-06 ad=5.56402e-06
+m_count 46
+Average Scan Matching Score=358.801
+neff= 120
+update frame 781
+update ld=1.45664e-06 ad=5.67245e-06
+m_count 47
+Average Scan Matching Score=358.795
+neff= 120
+update frame 803
+update ld=1.44831e-06 ad=5.64002e-06
+m_count 48
+Average Scan Matching Score=358.795
+neff= 120
+update frame 819
+update ld=1.45712e-06 ad=5.67434e-06
+m_count 49
+Average Scan Matching Score=358.804
+neff= 120
+update frame 835
+update ld=1.45863e-06 ad=5.68023e-06
+m_count 50
+Average Scan Matching Score=358.796
+neff= 120
+update frame 850
+update ld=1.45633e-06 ad=5.67129e-06
+m_count 51
+Average Scan Matching Score=358.799
+neff= 120
+update frame 859
+update ld=1.43341e-06 ad=5.58205e-06
+m_count 52
+Average Scan Matching Score=358.797
+neff= 120
+update frame 877
+update ld=1.45677e-06 ad=5.67305e-06
+m_count 53
+Average Scan Matching Score=358.785
+neff= 120
+update frame 896
+update ld=1.45831e-06 ad=5.67906e-06
+m_count 54
+Average Scan Matching Score=358.795
+neff= 120
+update frame 915
+update ld=1.46014e-06 ad=5.6862e-06
+m_count 55
+Average Scan Matching Score=358.804
+neff= 120
+update frame 934
+update ld=1.4572e-06 ad=5.67477e-06
+m_count 56
+Average Scan Matching Score=358.8
+neff= 120
+update frame 954
+update ld=1.45903e-06 ad=5.68191e-06
+m_count 57
+Average Scan Matching Score=358.8
+neff= 120
+update frame 973
+update ld=1.45927e-06 ad=5.68286e-06
+m_count 58
+Average Scan Matching Score=358.792
+neff= 120
+update frame 982
+update ld=1.45951e-06 ad=5.6838e-06
+m_count 59
+Average Scan Matching Score=358.799
+neff= 120
+update frame 999
+update ld=1.46105e-06 ad=5.68982e-06
+m_count 60
+Average Scan Matching Score=358.79
+neff= 120
+update frame 1014
+update ld=1.43396e-06 ad=5.58435e-06
+m_count 61
+Average Scan Matching Score=358.794
+neff= 120
+update frame 1035
+update ld=1.45632e-06 ad=5.67143e-06
+m_count 62
+Average Scan Matching Score=358.794
+neff= 120
+update frame 1052
+update ld=1.43573e-06 ad=5.59126e-06
+m_count 63
+Average Scan Matching Score=358.792
+neff= 120
+update frame 1070
+update ld=1.45128e-06 ad=5.65185e-06
+m_count 64
+Average Scan Matching Score=358.789
+neff= 120
+update frame 1089
+update ld=1.45733e-06 ad=5.67541e-06
+m_count 65
+Average Scan Matching Score=358.803
+neff= 120
+update frame 1107
+update ld=1.45883e-06 ad=5.68128e-06
+m_count 66
+Average Scan Matching Score=358.794
+neff= 120
+update frame 1127
+update ld=1.46173e-06 ad=5.69259e-06
+m_count 67
+Average Scan Matching Score=358.791
+neff= 120
+update frame 1144
+update ld=1.447e-06 ad=5.63525e-06
+m_count 68
+Average Scan Matching Score=358.794
+neff= 120
+update frame 1161
+update ld=1.46189e-06 ad=5.69324e-06
+m_count 69
+Average Scan Matching Score=358.793
+neff= 120
+update frame 1175
+update ld=1.46213e-06 ad=5.69419e-06
+m_count 70
+Average Scan Matching Score=358.789
+neff= 120
+update frame 1193
+update ld=1.4595e-06 ad=5.68398e-06
+m_count 71
+Average Scan Matching Score=358.792
+neff= 120
+update frame 1204
+update ld=1.44827e-06 ad=5.64024e-06
+m_count 72
+Average Scan Matching Score=358.79
+neff= 120
+update frame 1220
+update ld=1.46046e-06 ad=5.68772e-06
+m_count 73
+Average Scan Matching Score=358.79
+neff= 120
+update frame 1236
+update ld=1.46261e-06 ad=5.69612e-06
+m_count 74
+Average Scan Matching Score=358.789
+neff= 120
+update frame 1257
+update ld=1.46359e-06 ad=5.69995e-06
+m_count 75
+Average Scan Matching Score=358.789
+neff= 120
+update frame 1277
+update ld=1.44034e-06 ad=5.60945e-06
+m_count 76
+Average Scan Matching Score=358.79
+neff= 120
+update frame 1293
+update ld=1.43797e-06 ad=5.60021e-06
+m_count 77
+Average Scan Matching Score=358.786
+neff= 120
+update frame 1314
+update ld=1.46352e-06 ad=5.69972e-06
+m_count 78
+Average Scan Matching Score=358.792
+neff= 120
+update frame 1327
+update ld=1.43609e-06 ad=5.59291e-06
+m_count 79
+Average Scan Matching Score=358.794
+neff= 120
+update frame 1346
+update ld=1.46451e-06 ad=5.70364e-06
+m_count 80
+Average Scan Matching Score=358.781
+neff= 120
+update frame 1363
+update ld=1.46188e-06 ad=5.6934e-06
+m_count 81
+Average Scan Matching Score=358.797
+neff= 120
+update frame 1380
+update ld=1.44297e-06 ad=5.61976e-06
+m_count 82
+Average Scan Matching Score=358.788
+neff= 120
+update frame 1397
+update ld=1.46349e-06 ad=5.69969e-06
+m_count 83
+Average Scan Matching Score=358.789
+neff= 120
+update frame 1413
+update ld=1.46625e-06 ad=5.71048e-06
+m_count 84
+Average Scan Matching Score=358.787
+neff= 120
+update frame 1429
+update ld=1.44272e-06 ad=5.61883e-06
+m_count 85
+Average Scan Matching Score=358.794
+neff= 120
+update frame 1450
+update ld=1.44007e-06 ad=5.60855e-06
+m_count 86
+Average Scan Matching Score=358.791
+neff= 120
+update frame 1470
+update ld=1.46331e-06 ad=5.69905e-06
+m_count 87
+Average Scan Matching Score=358.779
+neff= 120
+update frame 1487
+update ld=1.44246e-06 ad=5.61787e-06
+m_count 88
+Average Scan Matching Score=358.783
+neff= 120
+update frame 1502
+update ld=1.46985e-06 ad=5.72458e-06
+m_count 89
+Average Scan Matching Score=358.79
+neff= 120
+update frame 1518
+update ld=1.46466e-06 ad=5.70438e-06
+m_count 90
+Average Scan Matching Score=358.792
+neff= 120
+update frame 1539
+update ld=1.46531e-06 ad=5.70691e-06
+m_count 91
+Average Scan Matching Score=358.78
+neff= 120
+update frame 1560
+update ld=1.44044e-06 ad=5.61006e-06
+m_count 92
+Average Scan Matching Score=358.789
+neff= 120
+update frame 1574
+update ld=1.44172e-06 ad=5.61505e-06
+m_count 93
+Average Scan Matching Score=358.785
+neff= 120
+update frame 1592
+update ld=1.47073e-06 ad=5.72808e-06
+m_count 94
+Average Scan Matching Score=358.795
+neff= 120
+update frame 1614
+update ld=1.46836e-06 ad=5.71884e-06
+m_count 95
+Average Scan Matching Score=358.793
+neff= 120
+update frame 1634
+update ld=1.47095e-06 ad=5.72897e-06
+m_count 96
+Average Scan Matching Score=358.798
+neff= 120
+update frame 1651
+update ld=1.4657e-06 ad=5.70852e-06
+m_count 97
+Average Scan Matching Score=358.787
+neff= 120
+update frame 1664
+update ld=1.46908e-06 ad=5.7217e-06
+m_count 98
+Average Scan Matching Score=358.789
+neff= 120
+update frame 1679
+update ld=1.47168e-06 ad=5.73184e-06
+m_count 99
+Average Scan Matching Score=358.785
+neff= 120
+update frame 1683
+update ld=1.46642e-06 ad=5.71137e-06
+m_count 100
+Average Scan Matching Score=358.788
+neff= 120
+update frame 1687
+update ld=1.46954e-06 ad=5.72355e-06
+m_count 101
+Average Scan Matching Score=358.795
+neff= 120
+update frame 1701
+update ld=1.46978e-06 ad=5.7245e-06
+m_count 102
+Average Scan Matching Score=358.789
+neff= 120
+update frame 1716
+update ld=1.4729e-06 ad=5.73668e-06
+m_count 103
+Average Scan Matching Score=358.795
+neff= 120
+update frame 1733
+update ld=1.46738e-06 ad=5.71518e-06
+m_count 104
+Average Scan Matching Score=358.783
+neff= 120
+update frame 1751
+update ld=1.44455e-06 ad=5.62628e-06
+m_count 105
+Average Scan Matching Score=358.781
+neff= 120
+update frame 1768
+update ld=1.47362e-06 ad=5.73953e-06
+m_count 106
+Average Scan Matching Score=358.789
+neff= 120
+update frame 1790
+update ld=1.47098e-06 ad=5.72926e-06
+m_count 107
+Average Scan Matching Score=358.782
+neff= 120
+update frame 1808
+update ld=1.47122e-06 ad=5.73021e-06
+m_count 108
+Average Scan Matching Score=358.794
+neff= 120
+update frame 1827
+update ld=1.47382e-06 ad=5.74036e-06
+m_count 109
+Average Scan Matching Score=358.789
+neff= 120
+update frame 1843
+update ld=1.46646e-06 ad=5.71169e-06
+m_count 110
+Average Scan Matching Score=358.777
+neff= 120
+update frame 1862
+update ld=1.44885e-06 ad=5.64314e-06
+m_count 111
+Average Scan Matching Score=358.793
+neff= 120
+update frame 1880
+update ld=1.4462e-06 ad=5.63282e-06
+m_count 112
+Average Scan Matching Score=358.78
+neff= 120
+update frame 1896
+update ld=1.47486e-06 ad=5.74447e-06
+m_count 113
+Average Scan Matching Score=358.79
+neff= 120
+update frame 1917
+update ld=1.45289e-06 ad=5.65891e-06
+m_count 114
+Average Scan Matching Score=358.786
+neff= 120
+update frame 1930
+update ld=1.44979e-06 ad=5.64686e-06
+m_count 115
+Average Scan Matching Score=358.784
+neff= 120
+update frame 1951
+update ld=1.47314e-06 ad=5.7378e-06
+m_count 116
+Average Scan Matching Score=358.788
+neff= 120
+update frame 1963
+update ld=1.44738e-06 ad=5.63748e-06
+m_count 117
+Average Scan Matching Score=358.785
+neff= 120
+update frame 1983
+update ld=1.47073e-06 ad=5.72844e-06
+m_count 118
+Average Scan Matching Score=358.784
+neff= 120
+update frame 2001
+update ld=1.44785e-06 ad=5.63934e-06
+m_count 119
+Average Scan Matching Score=358.785
+neff= 120
+update frame 2018
+update ld=1.4741e-06 ad=5.74159e-06
+m_count 120
+Average Scan Matching Score=358.788
+neff= 120
+update frame 2037
+update ld=1.47145e-06 ad=5.73129e-06
+m_count 121
+Average Scan Matching Score=358.785
+neff= 120
+update frame 2054
+update ld=1.47458e-06 ad=5.7435e-06
+m_count 122
+Average Scan Matching Score=358.79
+neff= 120
+update frame 2070
+update ld=1.44879e-06 ad=5.64308e-06
+m_count 123
+Average Scan Matching Score=358.793
+neff= 120
+update frame 2089
+update ld=1.47506e-06 ad=5.7454e-06
+m_count 124
+Average Scan Matching Score=358.785
+neff= 120
+update frame 2098
+update ld=1.46566e-06 ad=5.7088e-06
+m_count 125
+Average Scan Matching Score=358.79
+neff= 120
+update frame 2118
+update ld=1.48105e-06 ad=5.76877e-06
+m_count 126
+Average Scan Matching Score=358.784
+neff= 120
+update frame 2140
+update ld=1.45098e-06 ad=5.65165e-06
+m_count 127
+Average Scan Matching Score=358.785
+neff= 120
+update frame 2160
+update ld=1.47602e-06 ad=5.74921e-06
+m_count 128
+Average Scan Matching Score=358.781
+neff= 120
+update frame 2175
+update ld=1.45053e-06 ad=5.64994e-06
+m_count 129
+Average Scan Matching Score=358.792
+neff= 120
+update frame 2191
+update ld=1.47328e-06 ad=5.73858e-06
+m_count 130
+Average Scan Matching Score=358.78
+neff= 120
+update frame 2205
+update ld=1.47964e-06 ad=5.76335e-06
+m_count 131
+Average Scan Matching Score=358.785
+neff= 120
+update frame 2223
+update ld=1.45478e-06 ad=5.66654e-06
+m_count 132
+Average Scan Matching Score=358.789
+neff= 120
+update frame 2238
+update ld=1.45888e-06 ad=5.68251e-06
+m_count 133
+Average Scan Matching Score=358.782
+neff= 120
+update frame 2254
+update ld=1.45139e-06 ad=5.65335e-06
+m_count 134
+Average Scan Matching Score=358.792
+neff= 120
+update frame 2273
+update ld=1.45774e-06 ad=5.6781e-06
+m_count 135
+Average Scan Matching Score=358.792
+neff= 120
+update frame 2289
+update ld=1.47794e-06 ad=5.7568e-06
+m_count 136
+Average Scan Matching Score=358.791
+neff= 120
+update frame 2300
+update ld=1.47786e-06 ad=5.75651e-06
+m_count 137
+Average Scan Matching Score=358.798
+neff= 120
+update frame 2316
+update ld=1.48917e-06 ad=5.80057e-06
+m_count 138
+Average Scan Matching Score=358.783
+neff= 120
+update frame 2330
+update ld=1.46792e-06 ad=5.71783e-06
+m_count 139
+Average Scan Matching Score=358.788
+neff= 120
+update frame 2351
+update ld=1.47601e-06 ad=5.74935e-06
+m_count 140
+Average Scan Matching Score=358.792
+neff= 120
+update frame 2362
+update ld=1.45304e-06 ad=5.65992e-06
+m_count 141
+Average Scan Matching Score=358.792
+neff= 120
+update frame 2382
+update ld=1.48176e-06 ad=5.77179e-06
+m_count 142
+Average Scan Matching Score=358.792
+neff= 120
+update frame 2401
+update ld=1.45853e-06 ad=5.68131e-06
+m_count 143
+Average Scan Matching Score=358.781
+neff= 120
+update frame 2421
+update ld=1.47829e-06 ad=5.75828e-06
+m_count 144
+Average Scan Matching Score=358.788
+neff= 120
+update frame 2433
+update ld=1.48011e-06 ad=5.76541e-06
+m_count 145
+Average Scan Matching Score=358.784
+neff= 120
+update frame 2451
+update ld=1.48035e-06 ad=5.76637e-06
+m_count 146
+[0m[ INFO] [1638555746.205414187]: Finished loading Gazebo ROS API Plugin.[0m
+[0m[ INFO] [1638555746.206945401]: waitForService: Service [/gazebo/set_physics_properties] has not been advertised, waiting...[0m
+[0m[ INFO] [1638555748.375611879]: waitForService: Service [/gazebo/set_physics_properties] is now available.[0m
+[0m[ INFO] [1638555748.410448218, 3546.109000000]: Physics dynamic reconfigure ready.[0m
+[0m[ INFO] [1638555749.135819371, 3546.354000000]: Camera Plugin: Using the 'robotNamespace' param: '/'[0m
+[0m[ INFO] [1638555749.143104721, 3546.354000000]: Camera Plugin (ns = /)  <tf_prefix_>, set to ""[0m
+[0m[ INFO] [1638555749.280603477, 3546.354000000]: Laser Plugin: Using the 'robotNamespace' param: '/'[0m
+[0m[ INFO] [1638555749.280730394, 3546.354000000]: Starting Laser Plugin (ns = /)[0m
+[0m[ INFO] [1638555749.282144861, 3546.354000000]: Laser Plugin (ns = /)  <tf_prefix_>, set to ""[0m
+[0m[ INFO] [1638555749.378899528, 3546.354000000]: Starting plugin DiffDrive(ns = //)[0m
+[0m[ INFO] [1638555749.380459928, 3546.354000000]: DiffDrive(ns = //): <tf_prefix> = [0m
+[0m[ INFO] [1638555749.381984936, 3546.354000000]: DiffDrive(ns = //): Advertise joint_states[0m
+[0m[ INFO] [1638555749.383871535, 3546.354000000]: DiffDrive(ns = //): Try to subscribe to cmd_vel[0m
+[0m[ INFO] [1638555749.387836433, 3546.354000000]: DiffDrive(ns = //): Subscribe to cmd_vel[0m
+[0m[ INFO] [1638555749.388794122, 3546.354000000]: DiffDrive(ns = //): Advertise odom on odom [0m
+[0m[ INFO] [1638555749.407678174, 3546.354000000]: imu plugin missing <frameName>, defaults to <bodyName>[0m
+[0m[ INFO] [1638555749.421716153, 3546.354000000]: Loading gazebo_ros_control plugin[0m
+[0m[ INFO] [1638555749.421901005, 3546.354000000]: Starting gazebo_ros_control plugin in namespace: /gripper[0m
+[0m[ INFO] [1638555749.422711480, 3546.354000000]: gazebo_ros_control plugin is waiting for model URDF in parameter [/robot_description] on the ROS param server.[0m
+[0m[ INFO] [1638555749.546765274, 3546.354000000]: Loaded gazebo_ros_control.[0m
+Average Scan Matching Score=358.787
+neff= 120
+[INFO] [1638555746.713181, 0.000000]: Reconfigure Request: k1:0.8, k2:0.4, k3:0.4
+finished init
+[INFO] [1638555746.727744, 0.000000]: Navigator: waiting for state info
+[INFO] [1638555746.731744, 0.000000]: Switching from Mode.IDLE -> Mode.IDLE
+"map" passed to lookupTransform argument target_frame does not exist. 
+[INFO] [1638555748.509440, 3546.203000]: Navigator: waiting for state info
+[INFO] [1638555748.511467, 3546.205000]: Switching from Mode.IDLE -> Mode.IDLE
+"map" passed to lookupTransform argument target_frame does not exist. 
+[INFO] [1638555748.513659, 3546.207000]: Navigator: waiting for state info
+[INFO] [1638555748.515833, 3546.209000]: Switching from Mode.IDLE -> Mode.IDLE
+"map" passed to lookupTransform argument target_frame does not exist. 
+[INFO] [1638555748.625314, 3546.307000]: Navigator: waiting for state info
+[INFO] [1638555748.627548, 3546.310000]: Switching from Mode.IDLE -> Mode.IDLE
+Could not find a connection between 'map' and 'base_footprint' because they are not part of the same tree.Tf has two or more unconnected trees.
+... logging to /home/group27/.ros/log/cac84cbe-5465-11ec-b866-a51b1206d290/roslaunch-genbu.stanford.edu-2360572.log
+Checking log directory for disk usage. This may take a while.
+Press Ctrl-C to interrupt
+Done checking log file disk usage. Usage is <1GB.
+]2;/data/home/group27/catkin_ws/src/asl_turtlebot/launch/project/project.launch
+[1mstarted roslaunch server http://genbu.stanford.edu:43107/[0m
+
+SUMMARY
+========
+
+PARAMETERS
+ * /gazebo/enable_ros_network: True
+ * /map: True
+ * /robot_description: <?xml version="1....
+ * /robot_state_publisher/publish_frequency: 30.0
+ * /rosdistro: noetic
+ * /rosversion: 1.15.13
+ * /rviz: section4
+ * /sim: True
+ * /turtlebot3_slam_gmapping/angularUpdate: 0.2
+ * /turtlebot3_slam_gmapping/astep: 0.05
+ * /turtlebot3_slam_gmapping/base_frame: base_footprint
+ * /turtlebot3_slam_gmapping/delta: 0.05
+ * /turtlebot3_slam_gmapping/iterations: 5
+ * /turtlebot3_slam_gmapping/kernelSize: 1
+ * /turtlebot3_slam_gmapping/lasamplerange: 0.005
+ * /turtlebot3_slam_gmapping/lasamplestep: 0.005
+ * /turtlebot3_slam_gmapping/linearUpdate: 0.2
+ * /turtlebot3_slam_gmapping/llsamplerange: 0.01
+ * /turtlebot3_slam_gmapping/llsamplestep: 0.01
+ * /turtlebot3_slam_gmapping/lsigma: 0.075
+ * /turtlebot3_slam_gmapping/lskip: 0
+ * /turtlebot3_slam_gmapping/lstep: 0.05
+ * /turtlebot3_slam_gmapping/map_update_interval: 2.0
+ * /turtlebot3_slam_gmapping/maxUrange: 4.0
+ * /turtlebot3_slam_gmapping/minimumScore: 100
+ * /turtlebot3_slam_gmapping/odom_frame: odom
+ * /turtlebot3_slam_gmapping/ogain: 3.0
+ * /turtlebot3_slam_gmapping/particles: 120
+ * /turtlebot3_slam_gmapping/resampleThreshold: 0.5
+ * /turtlebot3_slam_gmapping/sigma: 0.05
+ * /turtlebot3_slam_gmapping/srr: 0.01
+ * /turtlebot3_slam_gmapping/srt: 0.02
+ * /turtlebot3_slam_gmapping/str: 0.01
+ * /turtlebot3_slam_gmapping/stt: 0.02
+ * /turtlebot3_slam_gmapping/temporalUpdate: 0.5
+ * /turtlebot3_slam_gmapping/xmax: 10.0
+ * /turtlebot3_slam_gmapping/xmin: -10.0
+ * /turtlebot3_slam_gmapping/ymax: 10.0
+ * /turtlebot3_slam_gmapping/ymin: -10.0
+ * /use_sim_time: True
+ * /use_tf: True
+
+NODES
+  /
+    gazebo (gazebo_ros/gzserver)
+    gazebo_gui (gazebo_ros/gzclient)
+    goal_commander (asl_turtlebot/goal_commander.py)
+    navigator (asl_turtlebot/navigator.py)
+    robot_state_publisher (robot_state_publisher/robot_state_publisher)
+    rviz (rviz/rviz)
+    spawn_urdf (gazebo_ros/spawn_model)
+    turtlebot3_slam_gmapping (gmapping/slam_gmapping)
+    turtlebot_detector (asl_turtlebot/detector.py)
+    turtlebot_pose_controller (asl_turtlebot/pose_controller.py)
+
+[1mROS_MASTER_URI=http://genbu.stanford.edu:11127[0m
+]2;/data/home/group27/catkin_ws/src/asl_turtlebot/launch/project/project.launch http://genbu.stanford.edu:11127
+[1mprocess[robot_state_publisher-1]: started with pid [2360602][0m
+[1mprocess[gazebo-2]: started with pid [2360603][0m
+[1mprocess[gazebo_gui-3]: started with pid [2360605][0m
+[1mprocess[spawn_urdf-4]: started with pid [2360611][0m
+[1mprocess[turtlebot3_slam_gmapping-5]: started with pid [2360618][0m
+[1mprocess[goal_commander-6]: started with pid [2360621][0m
+[1mprocess[rviz-7]: started with pid [2360622][0m
+[1mprocess[turtlebot_detector-8]: started with pid [2360627][0m
+[1mprocess[navigator-9]: started with pid [2360629][0m
+[1mprocess[turtlebot_pose_controller-10]: started with pid [2360631][0m
+[1m[spawn_urdf-4] process has finished cleanly
+log file: /home/group27/.ros/log/cac84cbe-5465-11ec-b866-a51b1206d290/spawn_urdf-4*.log[0m
+[1m[rviz-7] process has finished cleanly
+log file: /home/group27/.ros/log/cac84cbe-5465-11ec-b866-a51b1206d290/rviz-7*.log[0m
+[turtlebot_pose_controller-10] killing on exit
+[navigator-9] killing on exit
+[turtlebot_detector-8] killing on exit
+[goal_commander-6] killing on exit
+[turtlebot3_slam_gmapping-5] killing on exit
+[gazebo_gui-3] killing on exit
+[gazebo-2] killing on exit
+[robot_state_publisher-1] killing on exit
+shutting down processing monitor...
+... shutting down processing monitor complete
+[1mdone[0m

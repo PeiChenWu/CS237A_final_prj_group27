@@ -15,7 +15,9 @@ import scipy.interpolate
 import matplotlib.pyplot as plt
 from controllers import PoseController, TrajectoryTracker, HeadingController
 from enum import Enum
-from sensor_msgs.msg import LaserScan
+
+from dilated_map import Map_Dilation
+
 
 from dynamic_reconfigure.server import Server
 from asl_turtlebot.cfg import NavigatorConfig
@@ -60,9 +62,8 @@ class Navigator:
         self.occupancy_updated = False
 
         # plan parameters
-        self.plan_resolution = 0.05 #0.1
+        self.plan_resolution = 0.1 #0.1
         self.plan_horizon = 15
-
 
         # time when we started following the plan
         self.current_plan_start_time = rospy.get_rostime()
@@ -73,8 +74,8 @@ class Navigator:
         self.v_max = 0.2  # maximum velocity
         self.om_max = 0.4  # maximum angular velocity
 
-        self.v_des = 0.14 #0.14 #0.16 #0.14 #0.15 #0.12  # desired cruising velocity
-        self.theta_start_thresh = 0.05 #0.02 #0.05 # threshold in theta to start moving forward when path-following
+        self.v_des = 0.2 #0.12  # desired cruising velocity
+        self.theta_start_thresh = 0.05  # threshold in theta to start moving forward when path-following
         self.start_pos_thresh = (
             0.2  # threshold to be far enough into the plan to recompute it
         )
@@ -85,17 +86,17 @@ class Navigator:
         self.at_thresh_theta = 0.1
 
         # trajectory smoothing
-        self.spline_alpha = 0.01 #0.01 # 0.15
+        self.spline_alpha = 0.05 # 0.15
         self.traj_dt = 0.1
 
         # trajectory tracking controller parameters
-        self.kpx = 2.0 #6.0 #2.0 #20.0 #0.5
-        self.kpy = 2.0 #6.0 #2.0 #20.0 #0.5
-        self.kdx = 5.0 #8.0 #4 #30.0 #1.5
-        self.kdy = 5.0 #8.0 #4 #30.0 #1.5
+        self.kpx = 2.0 #0.5
+        self.kpy = 2.0 #0.5
+        self.kdx = 5.0 #1.5
+        self.kdy = 5.0 #1.5
 
         # heading controller parameters
-        self.kp_th = 4.0 #3.5 #4.0 #15.0 #2.0
+        self.kp_th = 2.5 #2.0
 
         self.traj_controller = TrajectoryTracker(
             self.kpx, self.kpy, self.kdx, self.kdy, self.v_max, self.om_max
@@ -114,24 +115,27 @@ class Navigator:
         self.nav_smoothed_path_rej_pub = rospy.Publisher(
             "/cmd_smoothed_path_rejected", Path, queue_size=10
         )
-        #self.nav_vel_pub = rospy.Publisher("/cmd_vel", Twist, queue_size=10)
-        self.nav_vel_pub = rospy.Publisher("/nav_cmd_vel", Twist, queue_size=10)
+        self.nav_vel_pub = rospy.Publisher("/cmd_vel", Twist, queue_size=10)
+        
+        
+        
+        
+        
 
         self.trans_listener = tf.TransformListener()
 
         self.cfg_srv = Server(NavigatorConfig, self.dyn_cfg_callback)
         
-        ############# LASER SCAN SUBSCRIPTION ################
-        rospy.Subscriber('/scan', LaserScan, self.laser_callback)
-        self.distance_to_obstacle = None
-        self.distance_to_obstacle_threshold = 0.3 #0.2 #tuning parameter.Make sure we take into account map dilation
-
+        
+        
         ###########  THIS IS FOR MAP DILATION  ###############
         # add a publisher for map dilation
-        self.map_dilation_pub = rospy.Publisher("/dilated_map", OccupancyGrid, queue_size=10)
+        #self.map_dilation_pub = rospy.Publisher("/dilated_map", OccupancyGrid, queue_size=10)
         # add subscriber to original map and dilate it.
-        rospy.Subscriber("/map", OccupancyGrid, self.dilate_map_callback) # Subscribe to the original map, and dilate the map and publish it.
+        #rospy.Subscriber("/map", OccupancyGrid, self.dilate_map_callback) # Subscribe to the original map, and dilate the map and publish it.
         ###########  THIS IS FOR MAP DILATION  ###############
+        #dilation_map = Map_Dilation()
+        #dilation_map.run()
         
         
         
@@ -141,18 +145,6 @@ class Navigator:
 
         print("finished init")
 
-    def laser_callback(self, msg):
-        """ callback for thr laser rangefinder """
-
-        # index 0 corresponds to the head ie. angle = 0
-        self.distance_to_obstacle = msg.ranges[0]
-
-    def is_near_to_obstacle(self):
-        if self.distance_to_obstacle is None:
-            return False
-
-        return self.distance_to_obstacle < self.distance_to_obstacle_threshold
-
     def dyn_cfg_callback(self, config, level):
         rospy.loginfo(
             "Reconfigure Request: k1:{k1}, k2:{k2}, k3:{k3}".format(**config)
@@ -160,9 +152,6 @@ class Navigator:
         self.pose_controller.k1 = config["k1"]
         self.pose_controller.k2 = config["k2"]
         self.pose_controller.k3 = config["k3"]
-        #print(self.pose_controller.k1)
-        #print(self.pose_controller.k2)
-        #print(self.pose_controller.k3)
         return config
 
     def cmd_nav_callback(self, data):
@@ -187,20 +176,20 @@ class Navigator:
         self.map_height = msg.height
         self.map_resolution = msg.resolution
         self.map_origin = (msg.origin.position.x, msg.origin.position.y)
-
+        
+        
     def dilate_map_callback(self, msg):
-        #print(type(msg.data))
-        original_map = np.array(msg.data) # probablity in row vector
-        length = original_map.shape[0] # len(original_map)
+        #print(msg.data)
+        original_map = np.array(msg.data)
+        length = original_map.shape[0]
         original_map = original_map.reshape(int(round(np.sqrt(length))), int(round(np.sqrt(length))))
-        dilated_map = grey_dilation(original_map, size = (6,6)) # from scipy dilation
+        dilated_map = grey_dilation(original_map, size=(5,5))
         dilated_map = dilated_map.reshape(int(round(np.sqrt(length)))*int(round(np.sqrt(length))))
         dilated_msg = OccupancyGrid()
         dilated_msg.info = msg.info
-        dilated_msg.data = dilated_map.tolist()
+        dilated_msg.data = dilated_map
         self.map_dilation_pub.publish(dilated_msg)
-        
- 
+
 
     def map_callback(self, msg):
         """
@@ -220,12 +209,12 @@ class Navigator:
                 self.map_height,
                 self.map_origin[0],
                 self.map_origin[1],
-                2,
+                8,
                 self.map_probs,
             )
+            #self.occupancy.plot()
             if self.x_g is not None:
                 # if we have a goal to plan to, replan
-                print("New goal is: ", self.x_g, self.y_g, self.theta_g)
                 rospy.loginfo("replanning because of new map")
                 self.replan()  # new map, need to replan
 
@@ -364,13 +353,9 @@ class Navigator:
         # Attempt to plan a path
         state_min = self.snap_to_grid((-self.plan_horizon, -self.plan_horizon))
         state_max = self.snap_to_grid((self.plan_horizon, self.plan_horizon))
-        #print(state_min)
-        #print(state_max)
         x_init = self.snap_to_grid((self.x, self.y))
         self.plan_start = x_init
-        #print(x_init)
         x_goal = self.snap_to_grid((self.x_g, self.y_g))
-        #print(x_goal)
         problem = AStar(
             state_min,
             state_max,
@@ -443,7 +428,7 @@ class Navigator:
         self.switch_mode(Mode.TRACK)
 
     def run(self):
-        rate = rospy.Rate(10)  # 10 Hz
+        rate = rospy.Rate(25)  # 10 Hz
         while not rospy.is_shutdown():
             # try to get state information to update self.x, self.y, self.theta
             try:
@@ -479,9 +464,6 @@ class Navigator:
                 elif not self.close_to_plan_start():
                     rospy.loginfo("replanning because far from start")
                     self.replan()
-                elif self.is_near_to_obstacle():
-                    rospy.loginfo("Close to obstacle")
-                    self.switch_mode(Mode.ALIGN)
                 elif (
                     rospy.get_rostime() - self.current_plan_start_time
                 ).to_sec() > self.current_plan_duration:

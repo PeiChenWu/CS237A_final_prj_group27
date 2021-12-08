@@ -14,9 +14,9 @@ usr_idx_to_obj = {
         
 if __name__=="__main__":
 	print('Enter the index of the item you would like to rescue')
-	print('1) Bowl')
+	#print('1) Bowl')
 	print('2) Fire hydrant')
-	print('3) Stop sign')
+	#print('3) Stop sign')
 	print('4) Mouse')
 	print('5) Traffic light')
 

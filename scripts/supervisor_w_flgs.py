@@ -11,7 +11,6 @@ from geometry_msgs.msg import Twist, PoseArray, Pose2D, PoseStamped
 from std_msgs.msg import Float32MultiArray, String
 import tf
 import numpy as np
-from visualization_msgs.msg import Marker
 
 # Suppress warning
 #warnings.filterwarnings("ignore", message="TF_REPEATED_DATA ignoring data with redundant timestamp ")
@@ -45,13 +44,13 @@ class SupervisorParams:
         self.theta_eps = rospy.get_param("~theta_eps", 0.3)
 
         # Time to stop at a stop sign
-        self.stop_time = rospy.get_param("~stop_time", 5.)
+        self.stop_time = rospy.get_param("~stop_time", 3.)
 
         # Minimum distance from a stop sign to obey it
-        self.stop_min_dist = rospy.get_param("~stop_min_dist", 0.65)#0.7#0.6
+        self.stop_min_dist = rospy.get_param("~stop_min_dist", 0.5)
 
         # Time taken to cross an intersection
-        self.crossing_time = rospy.get_param("~crossing_time", 5.)#4.0#3.0
+        self.crossing_time = rospy.get_param("~crossing_time", 5.)
 
 
         if verbose:
@@ -93,8 +92,6 @@ class Supervisor:
         self.curr_wpt  = 0
         self.wpts = None
 
-        self.initial_flg = False  # This is the flag to save the initial pt
-
         # User index to object id database
         self.usr_idx_to_obj = {
             51: "bowl",
@@ -114,14 +111,14 @@ class Supervisor:
         self.objs_to_be_rescued = []
          
 	# Waypoints
-        self.save_waypt_flg = False  # This is to save waypts manually
+        self.save_waypt_flg = True  # This is to save waypts manually
         if self.save_waypt_flg:
           basedir = '/home/group27/catkin_ws/src/asl_turtlebot/scripts/'
           self.fname=os.path.join(basedir, "manual_waypts.txt")
           print(self.fname)
           self.waypts = []
 
-        self.use_waypt_flg = True  # This is to use waypts 
+        self.use_waypt_flg = False  # This is to use waypts 
         if self.use_waypt_flg:
           basedir = '/home/group27/catkin_ws/src/asl_turtlebot/scripts/'
           self.fname=os.path.join(basedir, "savewaypts.txt")
@@ -131,32 +128,22 @@ class Supervisor:
 
         # Command pose for controller
         self.pose_goal_publisher = rospy.Publisher('/cmd_pose', Pose2D, queue_size=10)
-        
-        
-        # Command nav for controller
-        self.nav_goal_publisher = rospy.Publisher('/cmd_nav', Pose2D, queue_size=10)
-        
-        
 
         # Command vel (used for idling)
         self.cmd_vel_publisher = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
         
-        
-        
         # MARKER PUBLISHER
-        self.marker_publisher = rospy.Publisher('/marker_topic', Marker, queue_size=10)
-        
        
 
         ########## SUBSCRIBERS ##########
-  
+        
         # OBJECT LIST SUBSCRIBER (WILL NEED THIS FOR RESCUE PHASE)
         
 	# rescue command receiver # we can publish a string to /rescue_cmd, then inside the callback, we can create the object list and set the state to rescue state
         rospy.Subscriber('/rescue_cmd', String, self.rescue_cmd_callback)
         
         # bowl detector
-        #rospy.Subscriber('/detector/bowl', DetectedObject, self.obj_detected_callback)
+        rospy.Subscriber('/detector/bowl', DetectedObject, self.obj_detected_callback)
 
         # tv detector
         rospy.Subscriber('/detector/fire_hydrant', DetectedObject, self.obj_detected_callback)
@@ -182,7 +169,7 @@ class Supervisor:
         # If using gazebo, we have access to perfect state
         if self.params.use_gazebo:
             rospy.Subscriber('/gazebo/model_states', ModelStates, self.gazebo_callback)
-        #self.trans_listener = tf.TransformListener()
+        self.trans_listener = tf.TransformListener()
 
         # If using rviz, we can subscribe to nav goal click
         if self.params.rviz:
@@ -204,7 +191,7 @@ class Supervisor:
     def add_object_to_dict(self, dist, cl, obj_loc):
 	
         if cl in self.object_db.keys():
-            if abs(dist-self.object_db[cl][0])>0.05 and (dist<self.object_db[cl][0]):
+            if abs(dist-self.object_db[cl][0])<0.1 and (dist<self.object_db[cl][0]):
                 self.object_db[cl]  = [dist, [self.x, self.y, self.theta], (obj_loc)]
                 print('update existing item')
                 print(self.object_db)
@@ -212,11 +199,6 @@ class Supervisor:
                 pose_obj_msg.x = obj_loc[0]
                 pose_obj_msg.y = obj_loc[1]
                 self.publisher_dict[cl].publish(pose_obj_msg)	
-                
-                ################## marker publisher function ##########################
-                if cl != 13:
-                    self.marker_pub(cl,obj_loc[0],obj_loc[1])   # publish a marker on the detected object. However, the location is not perfect.
-                
         else:
             self.object_db[cl]  = [dist, (self.x, self.y, self.theta), (obj_loc)]
             print('add new item')
@@ -225,48 +207,8 @@ class Supervisor:
             pose_obj_msg.x = obj_loc[0]
             pose_obj_msg.y = obj_loc[1]
             self.publisher_dict[cl].publish(pose_obj_msg)	
-        
 
-################## marker publisher function ##########################
-    def marker_pub(self, cl,x,y, marker_type = 1):
-        #rate = rospy.Rate(1)
-
-        #while not rospy.is_shutdown():
-        marker = Marker()
-
-        marker.header.frame_id = "map"
-        marker.header.stamp = rospy.Time()
-
-        # IMPORTANT: If you're creating multiple markers, each need to have a separate marker ID.
-        marker.id = cl
-        #print(marker.id)
-
-
-        marker.type = marker_type # retangular
-
-        marker.pose.position.x = x 
-        marker.pose.position.y = y 
-        marker.pose.position.z = 2
-
-        marker.pose.orientation.x = 0.0
-        marker.pose.orientation.y = 0.0
-        marker.pose.orientation.z = 0.0
-        marker.pose.orientation.w = 1.0
-
-        marker.scale.x = 0.1
-        marker.scale.y = 0.1
-        marker.scale.z = 0.1
-
-        marker.color.a = 1.0 # Don't forget to set the alpha!
-        marker.color.r = 1.0
-        marker.color.g = 0.0
-        marker.color.b = 0.0
-
-        self.marker_publisher.publish(marker)
-        #print('Published marker!')
-    
-    
-    ########## SUBSCRIBER CALLBACKS ##########    
+    ########## SUBSCRIBER CALLBACKS ##########
     # Only called when bot.command.py is executed    
     def rescue_cmd_callback(self, msg):
         self.objs_to_be_rescued = []
@@ -278,73 +220,15 @@ class Supervisor:
             obj_id = int(idx)
             if obj_id in self.usr_idx_to_obj :
                 obj_name = self.usr_idx_to_obj[obj_id]
-                x, y, theta = self.object_db[obj_id][1]
-                rospy.loginfo('Adding ' + obj_name + " to rescue list. x: " + str(x) + " y: " + str(y) + " theta:" + str(theta))
+                rospy.loginfo('Adding ' + obj_name + " to rescue list")
                 self.objs_to_be_rescued.append(obj_id)
             else:
                 rospy.logwarn('Cannot find object mapping for index: ' + str(idx))
         
         if self.objs_to_be_rescued:
 	        self.rescue_wpts()
-    
+	        
     def obj_detected_callback(self,  msg):
-        self.obj_detected_callback_wo_tf(msg)
-        #self.obj_detected_callback_tf(msg)
-    
-    def obj_detected_callback_tf(self,  msg):
-        cl  = msg.id
-        
-        d = msg.distance
-        thetaleft = msg.thetaleft
-        thetaright = msg.thetaright
-        
-        #position of the object in the camera frame
-        theta = thetaright + (thetaleft - thetaright) / 2
-        x_c = d * np.cos(theta) 
-        y_c = d * np.sin(theta)
-        z_c = 0
-        x_c_t = np.array([x_c, y_c, z_c, 1])
-        
-        print(f'robot @ x:{self.x}, y:{self.y}, theta:{self.theta}')
-        print(f'd:{d}, thetaleft:{thetaleft}, thetaright:{thetaright}')
-        
-        try:
-            # 1. Camera to robot frame
-            (trans1, rot1) = self.trans_listener.lookupTransform('/base_link', '/base_camera',rospy.Time(0))
-            _, _, theta_z1 = tf.transformations.euler_from_quaternion(rot1)
-            
-            #transformation from camera frame to robot frame 
-            T_RC = np.array([
-            [np.cos(theta_z1), -np.sin(theta_z1), 0, trans1[0]], 
-            [np.sin(theta_z1),  np.cos(theta_z1), 0, trans1[1]], 
-            [0,                                0, 1, trans1[2]], 
-            [0,                                0, 0,        1],
-            ])
-            
-            x_r_t = T_RC @ x_c_t  #co-ordinates in robot frame
-               
-            # 2. Robot frame to map frame
-            (trans, rot) = self.trans_listener.lookupTransform('map', '/base_link', rospy.Time(0))
-            _, _, theta_z = tf.transformations.euler_from_quaternion(rot)
-            
-            #Rotation from robot frame to map
-            T_MR = np.array([
-            [np.cos(theta_z), -np.sin(theta_z), 0, trans[0]], 
-            [np.sin(theta_z),  np.cos(theta_z), 0, trans[1]], 
-            [0,                              0, 1, trans[2]], 
-            [0,                              0, 0,        1],
-            ])
-             
-            x_m = T_MR @ x_r_t # object in map co-ordinates
-            x_m = x_m[0:3]
-            
-            self.add_object_to_dict(d, cl, x_m)            
-            print(f'object in map frame @ {x_m}')
-            
-        except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
-            pass
-
-    def obj_detected_callback_wo_tf(self,  msg):
         cl  = msg.id
         
         d = msg.distance
@@ -406,12 +290,6 @@ class Supervisor:
         quaternion = (pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w)
         euler = tf.transformations.euler_from_quaternion(quaternion)
         self.theta = euler[2]
-        if self.initial_flg:
-          a =  np.array([[self.x, self.y, self.theta]])
-          with open(self.fname, "ab") as f:
-            np.savetxt(f, a)
-          self.initial_flg = False
-          #np.savetxt(self.fname, total_waypts)
         #print("Gazebo initial point")
         #print(self.x, self.y, self.theta)
 
@@ -430,7 +308,6 @@ class Supervisor:
                           nav_pose_origin.pose.orientation.w)
             euler = tf.transformations.euler_from_quaternion(quaternion)
             self.theta_g = euler[2]
-            self.marker_pub(0,self.x_g,self.y_g,2)
            
             if self.save_waypt_flg: 
               print("We should append to the waypts file")
@@ -482,8 +359,6 @@ class Supervisor:
 
         # distance of the stop sign
         dist = msg.distance
-        #sc = msg.confidence
-        #print("confidence:" + str(sc))
 
 
         # if close enough and in nav mode, stop
@@ -516,7 +391,7 @@ class Supervisor:
         nav_g_msg.y = self.y_g
         nav_g_msg.theta = self.theta_g
 
-        self.nav_goal_publisher.publish(nav_g_msg)
+        self.pose_goal_publisher.publish(nav_g_msg)
 
     def stay_idle(self):
         """ sends zero velocity to stay put """
@@ -595,7 +470,6 @@ class Supervisor:
               # Send zero velocity
               if self.curr_wpt == 0:
                  self.x_g, self.y_g, self.theta_g = self.wpts[self.curr_wpt,:]
-                 self.marker_pub(0,self.x_g,self.y_g,2)
                  print("Waypoint {} loaded, {} waypoints to go".format(self.curr_wpt, self.wpt_count-self.curr_wpt - 1))
                  self.curr_wpt += 1
                  self.mode = Mode.NAV
@@ -603,7 +477,6 @@ class Supervisor:
                  self.stay_idle()
               elif self.has_idled():
                  self.x_g, self.y_g, self.theta_g = self.wpts[self.curr_wpt,:]
-                 self.marker_pub(0,self.x_g,self.y_g,2)
                  print("Waypoint {} loaded, {} waypoints to go".format(self.curr_wpt, self.wpt_count-self.curr_wpt - 1))
                  self.curr_wpt += 1
                  self.mode = Mode.NAV
